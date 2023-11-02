@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="SerialSettingsPage">
+		<item key="cdtserial.portName" value="/dev/ttyACM0"/>
+		<item key="cdtserial.baudRate" value="115200"/>
+		<item key="cdtserial.byteSize" value="8"/>
+		<item key="cdtserial.parity" value="None"/>
+		<item key="cdtserial.stopBits" value="1"/>
+	</section>
+</section>
