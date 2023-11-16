@@ -60,8 +60,8 @@ all: main-build
 main-build: hydrophone.elf secondary-outputs
 
 # Tool invocations
-hydrophone.elf hydrophone.map: $(OBJS) $(USER_OBJS) /home/coldstuff1/robotics_auv_2024/stm_workspace/hydrophone/STM32L433RCTXP_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "hydrophone.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/coldstuff1/robotics_auv_2024/stm_workspace/hydrophone/STM32L433RCTXP_FLASH.ld" --specs=nosys.specs -Wl,-Map="hydrophone.map" -Wl,--gc-sections -static -L"/home/coldstuff1/robotics_auv_2024/stm_workspace/hydrophone/Core/Lib" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+hydrophone.elf hydrophone.map: $(OBJS) $(USER_OBJS) /home/coldstuff1/robotics_auv_2024/auv-embedded-2024/stm_workspace/hydrophone/STM32L433RCTXP_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "hydrophone.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/coldstuff1/robotics_auv_2024/auv-embedded-2024/stm_workspace/hydrophone/STM32L433RCTXP_FLASH.ld" --specs=nosys.specs -Wl,-Map="hydrophone.map" -Wl,--gc-sections -static -L"/home/coldstuff1/robotics_auv_2024/auv-embedded-2024/stm_workspace/hydrophone/Core/Lib" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

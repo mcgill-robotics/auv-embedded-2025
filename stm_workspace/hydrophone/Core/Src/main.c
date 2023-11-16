@@ -21,7 +21,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,21 +50,32 @@ UART_HandleTypeDef huart2;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif
 
+PUTCHAR_PROTOTYPE
+{
+  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  return ch;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void sineF32(const float32_t frequency, const float32_t amplitude, const float32_t offset, float32_t time, const float32_t alignment, uint32_t *pOut) {
+void sineF32(const float32_t frequency, const float32_t amplitude, const float32_t offset, float32_t time, float32_t *pOut) {
 	float32_t point;
 	point = amplitude * arm_sin_f32((2*M_PI*frequency)*time) + offset;
-	*pOut = (uint32_t) roundf(point * alignment);
+	*pOut = point;
 }
 
-static uint32_t sineValues[40];
+static float32_t sineValues[1024];
+static uint32_t sec = 0;
 /* USER CODE END 0 */
 
 /**
@@ -96,17 +106,20 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART2_UART_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  float32_t x = 0.0f;
+  HAL_TIM_Base_Start_IT(&htim2);
+  /*float32_t x = 0.0f;
   float32_t fx;
-    for (uint8_t i = 0; i < 40; i++) {
-  	  uint32_t *y = &sineValues[i];
-  	  sineF32(1102.3f, 0.333f, 0.5f, x, 4095, y);
-  	  x += 0.00002268f;
-    }
-    fx = fft(sineValues, 40, 1102.3f, 92972972.97297);
+  HAL_UART_Transmit(&huart2, (uint8_t *)"hello", 5, HAL_MAX_DELAY);
+  for (uint16_t i = 0; i < 1024; i += 2) {
+  	 float32_t *y = &sineValues[i];
+  	 sineF32(1102.3f, 0.5f, 0.5f, x, y);
+  	 sineValues[i+1] = 0;
+  	 x += 0.00002268f;
+   }
+   fx = fft(sineValues, 1024, 1102, 92972972.97297);*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -190,7 +203,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 1814;
+  htim2.Init.Period = 80000000;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -269,9 +282,6 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, SMPS_V1_Pin|SMPS_SW_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
-
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
@@ -291,18 +301,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(SMPS_PG_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD4_Pin */
-  GPIO_InitStruct.Pin = LD4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD4_GPIO_Port, &GPIO_InitStruct);
-
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	sec++;
+	printf("%d microseconds\r\n", sec);
+}
 /* USER CODE END 4 */
 
 /**

@@ -8,18 +8,13 @@ const arm_cfft_instance_f32 instance = {
 };
 
 
-float32_t fft(uint32_t* buff, uint32_t size, uint32_t target, float32_t fs)
+float32_t fft(float32_t* buff, uint32_t size, uint32_t target, float32_t fs)
 {
-    float32_t temp_buff[size];
-    for (int i = 0; i < size; i++)
-    {
-        temp_buff[i] = (float32_t) buff[i];
-    }
 
-    arm_cfft_f32(&arm_cfft_sR_f32_len512, temp_buff, 0, 0);
+    arm_cfft_f32(&instance, buff, 0, 0);
 
     float32_t freq[size / 2];
-    arm_cmplx_mag_f32(temp_buff, freq, size / 2);
+    arm_cmplx_mag_f32(buff, freq, size / 2);
 
     uint32_t target_bin = (uint32_t) (target * size / fs);
 
