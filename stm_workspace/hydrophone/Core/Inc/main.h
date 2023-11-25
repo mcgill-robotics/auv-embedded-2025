@@ -66,8 +66,6 @@ void Error_Handler(void);
 #define MCO_GPIO_Port GPIOH
 #define SMPS_V1_Pin GPIO_PIN_5
 #define SMPS_V1_GPIO_Port GPIOA
-#define SMPS_PG_Pin GPIO_PIN_6
-#define SMPS_PG_GPIO_Port GPIOA
 #define SMPS_SW_Pin GPIO_PIN_7
 #define SMPS_SW_GPIO_Port GPIOA
 #define TMS_Pin GPIO_PIN_13
