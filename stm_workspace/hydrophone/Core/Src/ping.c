@@ -27,14 +27,14 @@ float32_t fft(float32_t* buff, uint32_t size, uint32_t target, float32_t fs)
 }
 
 
-uint32_t get_frequency(uint32_t* buff, uint32_t size, float32_t fs)
+uint32_t get_frequency(float32_t* buff, uint32_t size, float32_t fs)
 {
-    uint32_t target_frequencies[] = {25000, 30000, 35000, 40000};
+    uint32_t target_frequencies[] = {25000, 30000, 35000, 40000, 45000};
     float32_t temp_buff[size];
 
     for (int i = 0; i < size; i++)
     {
-        temp_buff[i] = (float32_t) buff[i];
+        temp_buff[i] = buff[i];
     }
 
     arm_cfft_f32(&instance, temp_buff, 0, 0);
@@ -46,11 +46,16 @@ uint32_t get_frequency(uint32_t* buff, uint32_t size, float32_t fs)
     uint32_t frequency = 0;
     uint32_t target_bin = 0;
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 5; i++) {
         target_bin = (uint32_t) round(target_frequencies[i] * size / fs);
         if (freq[target_bin] > max) {
-            frequency = target_frequencies[i];
-            max = freq[target_bin];
+        	if(i < 4) {
+        		frequency = target_frequencies[i];
+        		max = freq[target_bin];
+        	}
+        	else {
+        		frequency = -1;
+        	}
         }
     }
 
@@ -129,7 +134,7 @@ uint8_t has_ping(uint32_t* buff, uint32_t size, uint32_t threshold)
     // log_debug(details);
     // return 1;
 
-    float32_t amp = fft(buff, size, 30000, 972972.97297);
+    float32_t amp = fft((float32_t *)buff, size, 30000, 972972.97297);
 
     if (amp > (float32_t) threshold * 1.5 / 1000.0)
     {

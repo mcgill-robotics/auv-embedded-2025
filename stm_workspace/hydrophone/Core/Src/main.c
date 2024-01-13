@@ -81,11 +81,10 @@ void sineF32(const float32_t frequency, const float32_t amplitude, const float32
 
 void calculateVoltage(uint16_t VREFINT_DATA, uint16_t ADC_DATA, float32_t *pOut) {
 	float32_t VREFINT_CAL = (float32_t) *((uint16_t*) VREFINT_CAL_ADDR);
-	float32_t Vdda = 3.0 * (VREFINT_CAL / (float32_t) VREFINT_DATA);
-	*pOut = (Vdda / 4095) * (float32_t) ADC_DATA;
+	float32_t Vdda = 3.0 * (VREFINT_CAL / VREFINT_DATA);
+	*pOut = (Vdda / 4095) * (float32_t)ADC_DATA;
 }
 
-static float32_t sineValues[1024];
 static uint32_t sec = 0;
 volatile uint16_t adcChannels[4];
 volatile int conversionComplete = 0;
@@ -126,34 +125,41 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-  float32_t V1, V2, V3, V4;
-  //HAL_TIM_Base_Start_IT(&htim2);
-  /*float32_t x = 0.0f;
-  float32_t fx;
-  HAL_UART_Transmit(&huart2, (uint8_t *)"hello", 5, HAL_MAX_DELAY);
-  for (uint16_t i = 0; i < 1024; i += 2) {
-  	 float32_t *y = &sineValues[i];
-  	 sineF32(1102.3f, 0.5f, 0.5f, x, y);
-  	 sineValues[i+1] = 0;
-  	 x += 0.00002268f;
-   }
-   fx = fft(sineValues, 1024, 1102, 92972972.97297);*/
+  float32_t hydrophone0[1024];
+  float32_t hydrophone1[1024];
+  float32_t hydrophone2[1024];
+  float32_t V2, V3, V4;
+  uint32_t frequency;
+  for (int i = 0; i < 512; i++) {
+	  hydrophone0[2*i + 1] = 0;
+	  hydrophone1[2*i + 1] = 0;
+	  hydrophone2[2*i + 1] = 0;
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adcChannels, 4);
-	  while (conversionComplete == 0) {
-		  continue;
+	  for(int i = 0; i < 512; i++) {
+		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adcChannels, 4);
+		  while (conversionComplete == 0) {
+			  continue;
+		  }
+		  conversionComplete = 0;
+		  calculateVoltage(adcChannels[0], adcChannels[1], &V2);
+		  calculateVoltage(adcChannels[0], adcChannels[2], &V3);
+		  calculateVoltage(adcChannels[0], adcChannels[3], &V4);
+		  hydrophone0[2*i] = V2;
+		  hydrophone1[2*i] = V3;
+		  hydrophone2[2*i] = V4;
 	  }
-	  	conversionComplete = 0;
-		calculateVoltage(adcChannels[0], adcChannels[1], &V2);
-		calculateVoltage(adcChannels[0], adcChannels[2], &V3);
-		calculateVoltage(adcChannels[0], adcChannels[3], &V4);
-		printf("CH2: %f, CH3: %f, CH4: %f\r\n", V2, V3, V4);
-		HAL_Delay(100);
+	  frequency = get_frequency(hydrophone0, 1024, 4705882.3529);
+	  if (frequency != -1) {
+		  printf("frequency from hydrophone 1: %lu\r\n", frequency);
+	  }
+	  //printf("frequency from hydrophone 2: %lu", get_frequency(hydrophone1, 1024, 4705882.35));
+	  //printf("frequency from hydrophone 3: %lu", get_frequency(hydrophone2, 1024, 4705882.35));
 
     /* USER CODE END WHILE */
 
@@ -430,10 +436,10 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	sec++;
-	printf("%d microseconds\r\n", sec);
-}
+//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	//sec++;
+	//printf("%d microseconds\r\n", sec);
+//}
 
 /*void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc) {
 }*/
