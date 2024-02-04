@@ -1,3 +1,9 @@
+/*
+
+DO NOT FLASH TO TEENSY OR TO ARDUINO
+
+*/
+
 #include <EEPROM.h>
 #include <Wire.h>
 #include "MS5837.h"

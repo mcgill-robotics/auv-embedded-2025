@@ -1,3 +1,9 @@
+/*
+
+DO NOT FLASH TO TEENSY OR TO ARDUINO
+
+*/
+
 #include <Servo.h>
 
 // boolean for interrupts
