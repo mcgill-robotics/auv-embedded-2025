@@ -4,6 +4,12 @@ DO NOT FLASH TO TEENSY OR TO ARDUINO
 
 */
 
+// test MCU kill switch
+// test water interrupt
+// test delay needed for thruster initialization
+// test if ESCs arm after kill switches
+// arm all thrusters
+
 #include <Servo.h>
 
 // boolean for interrupts
@@ -70,9 +76,6 @@ void updateThrusters(const uint16_t microseconds[8]) {
 
 // attaches and arms thrusters
 void initThrusters() {
-	interrupts();
-	interruptFlag = false;
-
 	thrusters[SRG_P].attach(SRG_P_PIN);
 	thrusters[SRG_S].attach(SRG_S_PIN);
 	thrusters[SWY_BW].attach(SWY_BW_PIN);
@@ -84,6 +87,8 @@ void initThrusters() {
 
 	updateThrusters(offCommand);
 	delay(7000);
+
+	interruptFlag = false;
 }
 
 void killSystem() {
@@ -96,6 +101,18 @@ void powerSystem() {
 	delay(100);
 }
 
+void interruptRaised() {
+	interruptFlag = true;
+}
+
+void waterInterrupt() {
+	if (digitalRead(WATER_DETECTED) == HIGH) {
+        killSystem();
+    } else {
+        powerSystem();
+    }
+}
+
 void setup() {
 	pinMode(SYSTEM_KILLED, INPUT_PULLUP);
 	pinMode(THURSTERS_KILLED, INPUT_PULLUP);
@@ -103,18 +120,19 @@ void setup() {
 
 	pinMode(MCU_KS, OUTPUT);
 
-	attachInterrupt(digitalPinToInterrupt(SYSTEM_KILLED), initThrusters, RISING);
-	attachInterrupt(digitalPinToInterrupt(THURSTERS_KILLED), initThrusters, RISING);
-	attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), killSystem, RISING);
-	attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), powerSystem, FALLING);
+	attachInterrupt(digitalPinToInterrupt(SYSTEM_KILLED), interruptRaised, RISING);
+	attachInterrupt(digitalPinToInterrupt(THURSTERS_KILLED), interruptRaised, RISING);
+	attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, CHANGE);
 
 	initThrusters();
 }
 
 void loop() {
 	if (interruptFlag) {
-		interruptFlag = false;
+		initThrusters();
 	}
 
-	updateThrusters(microseconds);
+	if (digitalRead(WATER_DETECTED) == LOW) {
+		updateThrusters(microseconds);
+	}
 }
