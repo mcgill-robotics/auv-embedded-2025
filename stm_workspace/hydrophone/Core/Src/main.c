@@ -130,6 +130,9 @@ int main(void)
   float32_t hydrophone2[1024];
   float32_t V2, V3, V4;
   uint32_t frequency;
+  int32_t v2Variance;
+  int32_t v2Sum = 0;
+  int32_t v2SumSquares = 0;
   for (int i = 0; i < 512; i++) {
 	  hydrophone0[2*i + 1] = 0;
 	  hydrophone1[2*i + 1] = 0;
@@ -150,11 +153,17 @@ int main(void)
 		  calculateVoltage(adcChannels[0], adcChannels[1], &V2);
 		  calculateVoltage(adcChannels[0], adcChannels[2], &V3);
 		  calculateVoltage(adcChannels[0], adcChannels[3], &V4);
+		  v2Sum += V2;
+		  v2SumSquares += powf(V2, 2);
 		  hydrophone0[2*i] = V2;
 		  hydrophone1[2*i] = V3;
 		  hydrophone2[2*i] = V4;
 	  }
+	  v2Variance = (v2SumSquares - ((powf(v2Sum, 2))/512)) / (512 - 1);
+	  v2Sum = 0;
+	  v2SumSquares = 0;
 	  frequency = get_frequency(hydrophone0, 1024, 4705882.3529);
+	  printf("variance of hydrophone 1: %ld\r\n", v2Variance);
 	  if (frequency != -1) {
 		  printf("frequency from hydrophone 1: %lu\r\n", frequency);
 	  }
