@@ -112,6 +112,17 @@ void senseCurrent(float currents[]) {
 void setup() {
 	//pinMode(WATER_DETECTED, INPUT_PULLUP);
 	//pinMode(MCU_KS, OUTPUT);
+	pinMode(TC_1, INPUT);
+	pinMode(TC_2, INPUT);
+	pinMode(TC_3, INPUT);
+	pinMode(TC_4, INPUT);
+	pinMode(TC_5, INPUT);
+	pinMode(TC_6, INPUT);
+	pinMode(TC_7, INPUT);
+	pinMode(TC_8, INPUT);
+	pinMode(VBAT1_SENSE, INPUT);
+	pinMode(VBAT2_SENSE, INPUT);
+
 	//attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
 
 	initThrusters();
