@@ -4,21 +4,9 @@ DO NOT FLASH TO TEENSY OR TO ARDUINO
 
 */
 
-// test MCU kill switch
-// test water interrupt
-// test delay needed for thruster initialization
-// test if ESCs arm after kill switches
-// arm all thrusters
-
 #include <Servo.h>
 
-// boolean for interrupts
-volatile bool interruptFlag = false;
-
 // defines all MCU pins
-#define SYSTEM_KILLED 0
-#define THURSTERS_KILLED 1
-
 #define SRG_P_PIN 	2
 #define SRG_S_PIN	3
 #define SWY_BW_PIN 	4
@@ -87,8 +75,8 @@ void initThrusters() {
 
 	updateThrusters(offCommand);
 	delay(7000);
-
-	interruptFlag = false;
+	// reamring works when system killed automatically at 2000
+	// 7000 should be tested since it is more reliable based on bluerobotics
 }
 
 void killSystem() {
@@ -101,38 +89,19 @@ void powerSystem() {
 	delay(100);
 }
 
-void interruptRaised() {
-	interruptFlag = true;
-}
-
 void waterInterrupt() {
-	if (digitalRead(WATER_DETECTED) == HIGH) {
-        killSystem();
-    } else {
-        powerSystem();
-    }
+	killSystem();
+	while (true) {}
 }
 
 void setup() {
-	pinMode(SYSTEM_KILLED, INPUT_PULLUP);
-	pinMode(THURSTERS_KILLED, INPUT_PULLUP);
-	pinMode(WATER_DETECTED, INPUT_PULLUP);
-
-	pinMode(MCU_KS, OUTPUT);
-
-	attachInterrupt(digitalPinToInterrupt(SYSTEM_KILLED), interruptRaised, RISING);
-	attachInterrupt(digitalPinToInterrupt(THURSTERS_KILLED), interruptRaised, RISING);
-	attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, CHANGE);
+	//pinMode(WATER_DETECTED, INPUT_PULLUP);
+	//pinMode(MCU_KS, OUTPUT);
+	//attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
 
 	initThrusters();
 }
 
 void loop() {
-	if (interruptFlag) {
-		initThrusters();
-	}
-
-	if (digitalRead(WATER_DETECTED) == LOW) {
-		updateThrusters(microseconds);
-	}
+	updateThrusters(microseconds);
 }
