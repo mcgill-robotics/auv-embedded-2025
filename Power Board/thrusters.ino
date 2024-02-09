@@ -34,6 +34,7 @@ DO NOT FLASH TO TEENSY OR TO ARDUINO
 #define VBAT2_SENSE 23
 
 // defines 8 thursters for initialization in an array
+// should be replaced with definitions from ROS
 #define SRG_P 	0
 #define SRG_S	1
 #define SWY_BW 	2
@@ -47,8 +48,11 @@ DO NOT FLASH TO TEENSY OR TO ARDUINO
 Servo thrusters[8];
 
 // signals to push to thrusters
-uint16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; 
-const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500}; 
+uint16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
+const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
+
+// creates array for 8 thruster currents
+float currents[8];
 
 // updates thrusters' pwm signals from array
 void updateThrusters(const uint16_t microseconds[8]) {
@@ -92,6 +96,17 @@ void powerSystem() {
 void waterInterrupt() {
 	killSystem();
 	while (true) {}
+}
+
+void senseCurrent(float currents[]) {
+	currents[0] = ((analogRead(TC_1) * 3.3) / 1023) / 0.005;
+	currents[1] = ((analogRead(TC_2) * 3.3) / 1023) / 0.005;
+	currents[2] = ((analogRead(TC_3) * 3.3) / 1023) / 0.005;
+    currents[3] = ((analogRead(TC_4) * 3.3) / 1023) / 0.005;
+    currents[4] = ((analogRead(TC_5) * 3.3) / 1023) / 0.005;
+    currents[5] = ((analogRead(TC_6) * 3.3) / 1023) / 0.005;
+    currents[6] = ((analogRead(TC_7) * 3.3) / 1023) / 0.005;
+    currents[7] = ((analogRead(TC_8) * 3.3) / 1023) / 0.005;
 }
 
 void setup() {
