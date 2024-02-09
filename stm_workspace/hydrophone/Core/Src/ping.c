@@ -7,7 +7,6 @@ const arm_cfft_instance_f32 instance = {
   512, twiddleCoef_512, armBitRevIndexTable512, ARMBITREVINDEXTABLE_512_TABLE_LENGTH
 };
 
-
 float32_t fft(float32_t* buff, uint32_t size, uint32_t target, float32_t fs)
 {
 
@@ -29,7 +28,7 @@ float32_t fft(float32_t* buff, uint32_t size, uint32_t target, float32_t fs)
 
 uint32_t get_frequency(float32_t* buff, uint32_t size, float32_t fs)
 {
-    uint32_t target_frequencies[] = {25000, 30000, 35000, 40000, 45000};
+    uint32_t target_frequencies[] = {25000, 30000, 35000, 40000};
     float32_t temp_buff[size];
 
     for (int i = 0; i < size; i++)
@@ -46,16 +45,11 @@ uint32_t get_frequency(float32_t* buff, uint32_t size, float32_t fs)
     uint32_t frequency = 0;
     uint32_t target_bin = 0;
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 4; i++) {
         target_bin = (uint32_t) round(target_frequencies[i] * size / fs);
         if (freq[target_bin] > max) {
-        	if(i < 4) {
-        		frequency = target_frequencies[i];
-        		max = freq[target_bin];
-        	}
-        	else {
-        		frequency = -1;
-        	}
+        	frequency = target_frequencies[i];
+        	max = freq[target_bin];
         }
     }
 
