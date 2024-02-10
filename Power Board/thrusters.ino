@@ -98,7 +98,12 @@ void powerSystem() {
 
 void waterInterrupt() {
 	killSystem();
-	while (true) {}
+	while (true) {
+		digitalWrite(TEENSY_LED, HIGH);
+		delay(500);
+		digitalWrite(TEENSY_LED, LOW);
+		delay(500);
+	}
 }
 
 void senseCurrent(float Tcurrents[]) {
@@ -130,6 +135,7 @@ void setup() {
 	pinMode(TC_8, INPUT);
 	pinMode(VBAT1_SENSE, INPUT);
 	pinMode(VBAT2_SENSE, INPUT);
+	pinMode(TEENSY_LED, OUTPUT);
 
 	//attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
 
