@@ -105,11 +105,11 @@ void senseCurrent(float Tcurrents[]) {
 	Tcurrents[0] = ((analogRead(TC_1) * 3.3) / 1023) / 0.005;
 	Tcurrents[1] = ((analogRead(TC_2) * 3.3) / 1023) / 0.005;
 	Tcurrents[2] = ((analogRead(TC_3) * 3.3) / 1023) / 0.005;
-    Tcurrents[3] = ((analogRead(TC_4) * 3.3) / 1023) / 0.005;
-    Tcurrents[4] = ((analogRead(TC_5) * 3.3) / 1023) / 0.005;
-    Tcurrents[5] = ((analogRead(TC_6) * 3.3) / 1023) / 0.005;
-    Tcurrents[6] = ((analogRead(TC_7) * 3.3) / 1023) / 0.005;
-    Tcurrents[7] = ((analogRead(TC_8) * 3.3) / 1023) / 0.005;
+	Tcurrents[3] = ((analogRead(TC_4) * 3.3) / 1023) / 0.005;
+	Tcurrents[4] = ((analogRead(TC_5) * 3.3) / 1023) / 0.005;
+	Tcurrents[5] = ((analogRead(TC_6) * 3.3) / 1023) / 0.005;
+	Tcurrents[6] = ((analogRead(TC_7) * 3.3) / 1023) / 0.005;
+	Tcurrents[7] = ((analogRead(TC_8) * 3.3) / 1023) / 0.005;
 }
 
 void senseVoltage(float voltages[]) {
