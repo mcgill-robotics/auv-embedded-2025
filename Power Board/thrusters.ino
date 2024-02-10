@@ -112,8 +112,9 @@ void senseCurrent(float Tcurrents[]) {
 	Tcurrents[7] = ((analogRead(TC_8) * 3.3) / 1023) / 0.005;
 }
 
-void senseVoltage(float voltages[]) {
-
+void senseVoltage(float Bvoltages[]) {
+	Bvoltages[0] = analogRead(VBAT1_SENSE) * 1.6625 + 12.5;
+	Bvoltages[1] = analogRead(VBAT2_SENSE) * 1.6625 + 12.5;
 }
 
 void setup() {
