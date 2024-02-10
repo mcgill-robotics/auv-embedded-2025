@@ -4,6 +4,7 @@ DO NOT FLASH TO TEENSY OR TO ARDUINO
 
 */
 
+#include <Arduino.h>
 #include <Servo.h>
 
 // defines all MCU pins
@@ -107,19 +108,19 @@ void waterInterrupt() {
 }
 
 void senseCurrent(float Tcurrents[]) {
-	Tcurrents[0] = ((analogRead(TC_1) * 3.3) / 1023) / 0.005;
-	Tcurrents[1] = ((analogRead(TC_2) * 3.3) / 1023) / 0.005;
-	Tcurrents[2] = ((analogRead(TC_3) * 3.3) / 1023) / 0.005;
-	Tcurrents[3] = ((analogRead(TC_4) * 3.3) / 1023) / 0.005;
-	Tcurrents[4] = ((analogRead(TC_5) * 3.3) / 1023) / 0.005;
-	Tcurrents[5] = ((analogRead(TC_6) * 3.3) / 1023) / 0.005;
-	Tcurrents[6] = ((analogRead(TC_7) * 3.3) / 1023) / 0.005;
-	Tcurrents[7] = ((analogRead(TC_8) * 3.3) / 1023) / 0.005;
+	Tcurrents[0] = (analogRead(TC_1)) / (0.005 * 50);
+	Tcurrents[1] = (analogRead(TC_2)) / (0.005 * 50);
+	Tcurrents[2] = (analogRead(TC_3)) / (0.005 * 50);
+	Tcurrents[3] = (analogRead(TC_4)) / (0.005 * 50);
+	Tcurrents[4] = (analogRead(TC_5)) / (0.005 * 50);
+	Tcurrents[5] = (analogRead(TC_6)) / (0.005 * 50);
+	Tcurrents[6] = (analogRead(TC_7)) / (0.005 * 50);
+	Tcurrents[7] = (analogRead(TC_8)) / (0.005 * 50);
 }
 
 void senseVoltage(float Bvoltages[]) {
-	Bvoltages[0] = analogRead(VBAT1_SENSE) * 1.6625 + 12.5;
-	Bvoltages[1] = analogRead(VBAT2_SENSE) * 1.6625 + 12.5;
+	Bvoltages[0] = map(analogRead(VBAT1_SENSE), 0.180, 2.586, 12.8, 16.8);
+	Bvoltages[1] = map(analogRead(VBAT2_SENSE), 0.180, 2.586, 12.8, 16.8);
 }
 
 void setup() {
