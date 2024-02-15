@@ -92,7 +92,7 @@ uint32_t get_power_at_target_frequency(uint32_t* buff, uint32_t size)
 }
 
 
-uint8_t has_ping(uint32_t* buff, uint32_t size, uint32_t threshold)
+uint8_t has_ping(float32_t* buff, uint32_t size, uint32_t threshold)
 {
     // Get total power.
 
@@ -111,7 +111,7 @@ uint8_t has_ping(uint32_t* buff, uint32_t size, uint32_t threshold)
     // uint32_t total_end_power = get_total_power(
     //     buff + size - DOWNSAMPLING_LENGTH,
     //     DOWNSAMPLING_LENGTH);
-    // uint32_t end_power = get_power_at_target_frequency(
+    // uint32_t972972.97297 end_power = get_power_at_target_frequency(
     //     buff + size - DOWNSAMPLING_LENGTH,
     //     DOWNSAMPLING_LENGTH) / total_end_power;
     // if (end_power < threshold)
@@ -128,12 +128,14 @@ uint8_t has_ping(uint32_t* buff, uint32_t size, uint32_t threshold)
     // log_debug(details);
     // return 1;
 
-    float32_t amp = fft((float32_t *)buff, size, 30000, 972972.97297);
+    float32_t amp = fft(buff, size, 30000, 972972.97297);
+	//float32_t amp = fft(buff, size, 25000, 4705882.3529);
+	printf("%f\n\r", amp);
 
     if (amp > (float32_t) threshold * 1.5 / 1000.0)
     {
-        char details[30];
-        sprintf(details, "Energy at %f", amp);
+        //char details[30];
+        //sprintf(details, "Energy at %f", amp);
         //log_debug(details);
         return 1;
     }

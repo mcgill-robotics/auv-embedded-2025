@@ -145,9 +145,9 @@ int main(void)
   float32_t hydrophone2[1024];
   float32_t V2, V3, V4;
   uint32_t frequency;
-  int32_t v2Variance;
-  int32_t v2Sum = 0;
-  int32_t v2SumSquares = 0;
+  float32_t v2Variance;
+  float32_t v2Sum = 0;
+  float32_t v2SumSquares = 0;
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   for (int i = 0; i < 512; i++) {
 	  hydrophone0[2*i + 1] = 0;
@@ -158,6 +158,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  //HAL_TIM_Base_Start_IT(&htim2);
   while (1)
   {
 	  for(int i = 0; i < 512; i++) {
@@ -175,12 +176,14 @@ int main(void)
 		  hydrophone1[2*i] = V3;
 		  hydrophone2[2*i] = V4;
 	  }
-	  v2Variance = (v2SumSquares - ((powf(v2Sum, 2))/512)) / (512 - 1);
+	  //printf("%f\r\n", v2Sum);
+	  //printf("%f\r\n", v2SumSquares);
+	  v2Variance = (v2SumSquares - ((powf(v2Sum, 2))/512.0f)) / (512.0f - 1.0f);
 	  v2Sum = 0;
 	  v2SumSquares = 0;
 	  frequency = get_frequency(hydrophone0, 1024, 4705882.3529);
-	  printf("variance of hydrophone 1: %ld\r\n", v2Variance);
-	  if (frequency != -1) {
+	  if (v2Variance > 0.9) {
+		  printf("variance of hydrophone 1: %f\r\n", v2Variance);
 		  Payload *payload1 = createPayload(frequency, usecs_elapsed, HYDROPHONE1);
 		  printf("frequency from hydrophone 1: %lu\r\n", payload1->frequency);
 		  printf("time from hydrophone 1: %lu\r\n", payload1->time);
