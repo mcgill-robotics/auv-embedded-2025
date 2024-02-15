@@ -73,22 +73,37 @@ PUTCHAR_PROTOTYPE
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void sineF32(const float32_t frequency, const float32_t amplitude, const float32_t offset, float32_t time, float32_t *pOut) {
-	float32_t point;
-	point = amplitude * arm_sin_f32((2*M_PI*frequency)*time) + offset;
-	*pOut = point;
+volatile uint32_t usecs_elapsed = 0;
+volatile uint16_t adcChannels[4];
+volatile int conversionComplete = 0;
+
+typedef enum {
+	HYDROPHONE1,
+	HYDROPHONE2,
+	HYDROPHONE3
+} Hydrophone;
+
+struct Payload {
+	Hydrophone hydrophone;
+	uint32_t frequency;
+	uint32_t time;
+};
+
+typedef struct Payload Payload;
+
+__always_inline Payload* createPayload(uint32_t frequency, uint32_t time, Hydrophone hydrophone) {
+	Payload *payloadPtr = (Payload *) malloc(sizeof(Payload));
+	payloadPtr->frequency = frequency;
+	payloadPtr->time = time;
+	payloadPtr->hydrophone = hydrophone;
+	return payloadPtr;
 }
 
-void calculateVoltage(uint16_t VREFINT_DATA, uint16_t ADC_DATA, float32_t *pOut) {
+__always_inline void calculateVoltage(uint16_t VREFINT_DATA, uint16_t ADC_DATA, float32_t *pOut) {
 	float32_t VREFINT_CAL = (float32_t) *((uint16_t*) VREFINT_CAL_ADDR);
 	float32_t Vdda = 3.0 * (VREFINT_CAL / VREFINT_DATA);
 	*pOut = (Vdda / 4095) * (float32_t)ADC_DATA;
 }
-
-static uint32_t sec = 0;
-volatile uint16_t adcChannels[4];
-volatile int conversionComplete = 0;
-
 
 /* USER CODE END 0 */
 
@@ -130,6 +145,10 @@ int main(void)
   float32_t hydrophone2[1024];
   float32_t V2, V3, V4;
   uint32_t frequency;
+  float32_t v2Variance;
+  float32_t v2Sum = 0;
+  float32_t v2SumSquares = 0;
+  HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   for (int i = 0; i < 512; i++) {
 	  hydrophone0[2*i + 1] = 0;
 	  hydrophone1[2*i + 1] = 0;
@@ -139,6 +158,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  //HAL_TIM_Base_Start_IT(&htim2);
   while (1)
   {
 	  for(int i = 0; i < 512; i++) {
@@ -150,13 +170,23 @@ int main(void)
 		  calculateVoltage(adcChannels[0], adcChannels[1], &V2);
 		  calculateVoltage(adcChannels[0], adcChannels[2], &V3);
 		  calculateVoltage(adcChannels[0], adcChannels[3], &V4);
+		  v2Sum += V2;
+		  v2SumSquares += powf(V2, 2);
 		  hydrophone0[2*i] = V2;
 		  hydrophone1[2*i] = V3;
 		  hydrophone2[2*i] = V4;
 	  }
+	  //printf("%f\r\n", v2Sum);
+	  //printf("%f\r\n", v2SumSquares);
+	  v2Variance = (v2SumSquares - ((powf(v2Sum, 2))/512.0f)) / (512.0f - 1.0f);
+	  v2Sum = 0;
+	  v2SumSquares = 0;
 	  frequency = get_frequency(hydrophone0, 1024, 4705882.3529);
-	  if (frequency != -1) {
-		  printf("frequency from hydrophone 1: %lu\r\n", frequency);
+	  if (v2Variance > 0.9) {
+		  printf("variance of hydrophone 1: %f\r\n", v2Variance);
+		  Payload *payload1 = createPayload(frequency, usecs_elapsed, HYDROPHONE1);
+		  printf("frequency from hydrophone 1: %lu\r\n", payload1->frequency);
+		  printf("time from hydrophone 1: %lu\r\n", payload1->time);
 	  }
 	  //printf("frequency from hydrophone 2: %lu", get_frequency(hydrophone1, 1024, 4705882.35));
 	  //printf("frequency from hydrophone 3: %lu", get_frequency(hydrophone2, 1024, 4705882.35));
@@ -244,7 +274,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ScanConvMode = ADC_SCAN_ENABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.NbrOfConversion = 4;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
@@ -323,7 +353,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 80000000;
+  htim2.Init.Period = 80;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -436,10 +466,9 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	//sec++;
-	//printf("%d microseconds\r\n", sec);
-//}
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	usecs_elapsed++;
+}
 
 /*void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc) {
 }*/

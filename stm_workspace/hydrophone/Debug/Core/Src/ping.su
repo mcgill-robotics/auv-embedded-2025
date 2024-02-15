@@ -1,5 +1,5 @@
-../Core/Src/ping.c:11:11:fft	72	dynamic
-../Core/Src/ping.c:30:10:get_frequency	128	dynamic
-../Core/Src/ping.c:65:10:get_total_power	32	static
-../Core/Src/ping.c:78:10:get_power_at_target_frequency	40	static
-../Core/Src/ping.c:101:9:has_ping	72	static
+../Core/Src/ping.c:10:11:fft	72	dynamic
+../Core/Src/ping.c:29:10:get_frequency	120	dynamic
+../Core/Src/ping.c:59:10:get_total_power	32	static
+../Core/Src/ping.c:72:10:get_power_at_target_frequency	40	static
+../Core/Src/ping.c:95:9:has_ping	40	static
