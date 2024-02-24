@@ -73,7 +73,7 @@ PUTCHAR_PROTOTYPE
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint32_t usecs_elapsed = 0;
+uint32_t usecs_elapsed = 0;
 volatile uint16_t adcChannels[4];
 volatile int conversionComplete = 0;
 
@@ -158,9 +158,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  //HAL_TIM_Base_Start_IT(&htim2);
+  HAL_TIM_Base_Start_IT(&htim2);
+  //printf("HI!\n\r");
   while (1)
   {
+	  HAL_Delay(400);
+	  printf("%lu\r\n", usecs_elapsed);
 	  for(int i = 0; i < 512; i++) {
 		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adcChannels, 4);
 		  while (conversionComplete == 0) {
@@ -353,7 +356,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 80;
+  htim2.Init.Period = 800;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -467,7 +470,7 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	usecs_elapsed++;
+	usecs_elapsed += 10;
 }
 
 /*void HAL_ADC_LevelOutOfWindowCallback(ADC_HandleTypeDef *hadc) {
