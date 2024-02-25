@@ -113,8 +113,8 @@ void senseCurrent(float Tcurrents[]) {
 }
 
 void senseVoltage(float Bvoltages[]) {
-	Bvoltages[0] = map(analogRead(VBAT1_SENSE), 0.180, 2.586, 12.8, 16.8);
-	Bvoltages[1] = map(analogRead(VBAT2_SENSE), 0.180, 2.586, 12.8, 16.8);
+	Bvoltages[0] = analogRead(VBAT1_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
+	Bvoltages[1] = analogRead(VBAT2_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
 }
 
 void setup() {
