@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include <sys/cdefs.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -78,6 +79,7 @@ volatile uint16_t adcChannels[4];
 volatile int conversionComplete = 0;
 
 typedef enum {
+  INIT,
 	HYDROPHONE1,
 	HYDROPHONE2,
 	HYDROPHONE3
@@ -91,6 +93,8 @@ struct Payload {
 
 typedef struct Payload Payload;
 
+volatile Hydrophone curPhone = INIT;
+
 __always_inline Payload* createPayload(uint32_t frequency, uint32_t time, Hydrophone hydrophone) {
 	Payload *payloadPtr = (Payload *) malloc(sizeof(Payload));
 	payloadPtr->frequency = frequency;
@@ -103,6 +107,12 @@ __always_inline void calculateVoltage(uint16_t VREFINT_DATA, uint16_t ADC_DATA, 
 	float32_t VREFINT_CAL = (float32_t) *((uint16_t*) VREFINT_CAL_ADDR);
 	float32_t Vdda = 3.0 * (VREFINT_CAL / VREFINT_DATA);
 	*pOut = (Vdda / 4095) * (float32_t)ADC_DATA;
+}
+
+__always_inline void calculateVariance(float32_t *pSum, float32_t *pSumSquares, float32_t *pResult) {
+	*pResult = ((*pResult) - ((powf((*pSum), 2))/512.0f)) / (512.0f - 1.0f);
+	*pSum = 0;
+	*pSumSquares = 0;
 }
 
 /* USER CODE END 0 */
@@ -140,57 +150,66 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-  float32_t hydrophone0[1024];
   float32_t hydrophone1[1024];
   float32_t hydrophone2[1024];
-  float32_t V2, V3, V4;
+  float32_t hydrophone3[1024];
+  float32_t V1, V2, V3;
   uint32_t frequency;
-  float32_t v2Variance;
-  float32_t v2Sum = 0;
-  float32_t v2SumSquares = 0;
+  float32_t v1Variance;
+  float32_t v1Sum = 0;
+  float32_t v1SumSquares = 0;
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   for (int i = 0; i < 512; i++) {
-	  hydrophone0[2*i + 1] = 0;
 	  hydrophone1[2*i + 1] = 0;
 	  hydrophone2[2*i + 1] = 0;
+	  hydrophone3[2*i + 1] = 0;
   }
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  Payload *payload1 = (Payload *) malloc(sizeof(Payload));
+  Payload *payload2 = (Payload *) malloc(sizeof(Payload));
+  Payload *payload3 = (Payload *) malloc(sizeof(Payload));
   HAL_TIM_Base_Start_IT(&htim2);
-  //printf("HI!\n\r");
   while (1)
   {
-	  HAL_Delay(400);
-	  printf("%lu\r\n", usecs_elapsed);
-	  for(int i = 0; i < 512; i++) {
+	  for(int i = 0; i < 1536; i++) {
 		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adcChannels, 4);
 		  while (conversionComplete == 0) {
 			  continue;
 		  }
 		  conversionComplete = 0;
-		  calculateVoltage(adcChannels[0], adcChannels[1], &V2);
-		  calculateVoltage(adcChannels[0], adcChannels[2], &V3);
-		  calculateVoltage(adcChannels[0], adcChannels[3], &V4);
-		  v2Sum += V2;
-		  v2SumSquares += powf(V2, 2);
-		  hydrophone0[2*i] = V2;
-		  hydrophone1[2*i] = V3;
-		  hydrophone2[2*i] = V4;
+      if (i == 0)
+        payload1->time = usecs_elapsed;
+      if (i == 1)
+        payload2->time = usecs_elapsed;
+      if (i == 3)
+        payload3->time = usecs_elapsed;
+      switch (curPhone) {
+      HYDROPHONE1:
+        calculateVoltage(adcChannels[0], adcChannels[1], &V1);
+        v1 += V1;
+        v1SumSquares += powf(V1, 2);
+        hydrophone1[2*i] = V1;
+        break;
+      HYDROPHONE2:
+        calculateVoltage(adcChannels[0], adcChannels[2], &V2);
+        hydrophone2[2*i] = V2;
+        break;
+      HYDROPHONE3:
+        calculateVoltage(adcChannels[0], adcChannels[3], &V3);
+        hydrophone3[2*i] = V3;
+        break;
+      }
 	  }
-	  //printf("%f\r\n", v2Sum);
-	  //printf("%f\r\n", v2SumSquares);
-	  v2Variance = (v2SumSquares - ((powf(v2Sum, 2))/512.0f)) / (512.0f - 1.0f);
-	  v2Sum = 0;
-	  v2SumSquares = 0;
-	  frequency = get_frequency(hydrophone0, 1024, 4705882.3529);
-	  if (v2Variance > 0.9) {
-		  printf("variance of hydrophone 1: %f\r\n", v2Variance);
-		  Payload *payload1 = createPayload(frequency, usecs_elapsed, HYDROPHONE1);
-		  printf("frequency from hydrophone 1: %lu\r\n", payload1->frequency);
-		  printf("time from hydrophone 1: %lu\r\n", payload1->time);
-	  }
+    calculateVariance(&v1Sum, &v1SumSquares, &v1Variance);
+    payload1->frequency = get_frequency(hydrophone1, 1024, 4705882.3529);
+    payload2->frequency = get_frequency(hydrophone2, 1024, 4705882.3529);
+    payload3->frequency = get_frequency(hydrophone3, 1024, 4705882.3529);
+		printf("variance of hydrophone 1: %f\r\n", v1Variance);
+		printf("frequency from hydrophone 1: %lu\r\n", payload1->frequency);
+		printf("time from hydrophone 1: %lu\r\n", payload1->time);
 	  //printf("frequency from hydrophone 2: %lu", get_frequency(hydrophone1, 1024, 4705882.35));
 	  //printf("frequency from hydrophone 3: %lu", get_frequency(hydrophone2, 1024, 4705882.35));
 
@@ -207,6 +226,7 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
+
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -225,6 +245,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+
   RCC_OscInitStruct.PLL.PLLM = 1;
   RCC_OscInitStruct.PLL.PLLN = 10;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV7;
@@ -302,6 +323,7 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+
 
   /** Configure Regular Channel
   */
@@ -477,7 +499,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }*/
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
-	conversionComplete = 1;
+	switch (curPhone) {
+  INIT:
+    curPhone = HYDROPHONE1;
+    break;
+  HYDROPHONE1:
+    curPhone = HYDROPHONE2;
+    break;
+  HYDROPHONE2:
+    curPhone = HYDROPHONE3;
+    break;
+  HYDROPHONE3:
+    curPhone = HYDROPHONE1;
+  }
+  conversionComplete = 1;
 }
 /* USER CODE END 4 */
 
