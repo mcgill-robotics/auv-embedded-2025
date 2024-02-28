@@ -47,7 +47,7 @@ uint16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 
 // creates array for 8 thruster current sensing
-float Tcurrents[8];
+double Tcurrents[8];
 
 // creates array for 2 battery voltage sensing
 float Bvoltages[2];
@@ -101,15 +101,15 @@ void waterInterrupt() {
 	}
 }
 
-void senseCurrent(float Tcurrents[]) {
-	Tcurrents[0] = (analogRead(TC_1)) / (0.005 * 50);
-	Tcurrents[1] = (analogRead(TC_2)) / (0.005 * 50);
-	Tcurrents[2] = (analogRead(TC_3)) / (0.005 * 50);
-	Tcurrents[3] = (analogRead(TC_4)) / (0.005 * 50);
-	Tcurrents[4] = (analogRead(TC_5)) / (0.005 * 50);
-	Tcurrents[5] = (analogRead(TC_6)) / (0.005 * 50);
-	Tcurrents[6] = (analogRead(TC_7)) / (0.005 * 50);
-	Tcurrents[7] = (analogRead(TC_8)) / (0.005 * 50);
+void senseCurrent(double Tcurrents[]) {
+	Tcurrents[0] = ((analogRead(TC_1) / 1024.0) * 3.3) / (0.005 * 50);
+	Tcurrents[1] = ((analogRead(TC_2) / 1024.0) * 3.3) / (0.005 * 50);
+	Tcurrents[2] = ((analogRead(TC_3) / 1024.0) * 3.3) / (0.005 * 50);
+	Tcurrents[3] = ((analogRead(TC_4) / 1024.0) * 3.3) / (0.005 * 50);
+	Tcurrents[4] = ((analogRead(TC_5) / 1024.0) * 3.3) / (0.005 * 50);
+	Tcurrents[5] = ((analogRead(TC_6) / 1024.0) * 3.3) / (0.005 * 50);
+	Tcurrents[6] = ((analogRead(TC_7) / 1024.0) * 3.3) / (0.005 * 50);
+	Tcurrents[7] = ((analogRead(TC_8) / 1024.0) * 3.3) / (0.005 * 50);
 }
 
 void senseVoltage(float Bvoltages[]) {
