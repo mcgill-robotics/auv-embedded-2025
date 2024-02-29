@@ -1,5 +1,7 @@
 #include <Arduino.h>
 #include <Servo.h>
+#include <ros.h>
+#include <auv_msgs/ThrusterMicroseconds.h>
 
 // defines all MCU pins
 #define SRG_P_PIN 	2
@@ -28,16 +30,15 @@
 #define VBAT1_SENSE 22
 #define VBAT2_SENSE 23
 
-// defines 8 thursters for initialization in an array
-// should be replaced with definitions from ROS
-#define SRG_P 	0
-#define SRG_S	1
-#define SWY_BW 	2
-#define SWY_ST 	3
-#define HVE_BW_P 	4
-#define HVE_BW_S 	5
-#define HVE_ST_S 	6
-#define HVE_ST_P 	7
+// defines 8 thursters from ROS for initialization in an array
+const uint8_t SRG_P 	= auv_msgs::ThrusterMicroseconds::SURGE_PORT;
+const uint8_t SRG_S 	= auv_msgs::ThrusterMicroseconds::SURGE_STAR;
+const uint8_t SWY_BW 	= auv_msgs::ThrusterMicroseconds::SWAY_BOW;
+const uint8_t SWY_ST 	= auv_msgs::ThrusterMicroseconds::SWAY_STERN;
+const uint8_t HVE_BW_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_PORT;
+const uint8_t HVE_BW_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_STAR;
+const uint8_t HVE_ST_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_STAR;
+const uint8_t HVE_ST_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_PORT;
 
 // creates array of 8 thrusters
 Servo thrusters[8];
@@ -64,6 +65,10 @@ void updateThrusters(const uint16_t microseconds[8]) {
 	thrusters[HVE_ST_S].writeMicroseconds(microseconds[HVE_ST_S]);
 }
 
+void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
+	memcpy(microseconds, tc.microseconds, 8*sizeof(uint16_t));
+}
+
 // attaches and arms thrusters
 void initThrusters() {
 	thrusters[SRG_P].attach(SRG_P_PIN);
@@ -76,10 +81,10 @@ void initThrusters() {
 	thrusters[HVE_ST_P].attach(HVE_ST_P_PIN);
 
 	updateThrusters(offCommand);
-	delay(7000);
-	// reamring works when system killed automatically at 2000
-	// 7000 should be tested since it is more reliable based on bluerobotics
 }
+
+ros::NodeHandle nh;
+ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
 
 void killSystem() {
 	digitalWrite(MCU_KS, HIGH);
@@ -118,6 +123,8 @@ void senseVoltage(float Bvoltages[]) {
 }
 
 void setup() {
+	initThrusters();
+	
 	//pinMode(WATER_DETECTED, INPUT_PULLUP);
 	//pinMode(MCU_KS, OUTPUT);
 	pinMode(TC_1, INPUT);
@@ -134,9 +141,11 @@ void setup() {
 
 	//attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
 
-	initThrusters();
+	nh.subscribe(sub);
+	nh.initNode();
 }
 
 void loop() {
 	updateThrusters(microseconds);
+	nh.spinOnce(); 
 }
