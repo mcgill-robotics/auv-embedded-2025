@@ -1,17 +1,17 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (11.3.rel1)
+# Toolchain: GNU Tools for STM32 (10.3-2021.10)
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
 S_SRCS += \
 ../Core/Startup/startup_stm32l433rctxp.s 
 
-OBJS += \
-./Core/Startup/startup_stm32l433rctxp.o 
-
 S_DEPS += \
 ./Core/Startup/startup_stm32l433rctxp.d 
+
+OBJS += \
+./Core/Startup/startup_stm32l433rctxp.o 
 
 
 # Each subdirectory must supply rules for building sources it contributes

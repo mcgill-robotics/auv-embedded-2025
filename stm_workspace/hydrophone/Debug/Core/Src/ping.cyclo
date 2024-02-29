@@ -1,5 +1,0 @@
-../Core/Src/ping.c:10:11:fft	2
-../Core/Src/ping.c:29:10:get_frequency	4
-../Core/Src/ping.c:59:10:get_total_power	2
-../Core/Src/ping.c:72:10:get_power_at_target_frequency	4
-../Core/Src/ping.c:95:9:has_ping	2
