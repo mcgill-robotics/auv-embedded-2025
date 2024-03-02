@@ -28,6 +28,7 @@
 // DC offset as seen per the ADC.
 #define DC_OFFSET PEAK_TO_PEAK / 2
 
+float32_t fft(float32_t* buff, uint32_t size, uint32_t target, float32_t fs);
 uint8_t has_ping(float32_t* buff, uint32_t size, uint32_t threshold);
 uint32_t get_power_at_target_frequency(uint32_t* buff, uint32_t size);
 uint32_t get_total_power(uint32_t* buff, uint32_t size);
