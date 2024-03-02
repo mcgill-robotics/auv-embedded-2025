@@ -110,7 +110,7 @@ __always_inline void calculateVoltage(uint16_t VREFINT_DATA, uint16_t ADC_DATA, 
 }
 
 __always_inline void calculateVariance(float32_t *pSum, float32_t *pSumSquares, float32_t *pResult) {
-	*pResult = ((*pResult) - ((powf((*pSum), 2))/512.0f)) / (512.0f - 1.0f);
+	*pResult = ((*pSumSquares) - ((powf((*pSum), 2))/512.0f)) / (512.0f - 1.0f);
 	*pSum = 0;
 	*pSumSquares = 0;
 }
@@ -154,10 +154,16 @@ int main(void)
   float32_t hydrophone2[1024];
   float32_t hydrophone3[1024];
   float32_t V1, V2, V3;
-  uint32_t frequency;
   float32_t v1Variance;
   float32_t v1Sum = 0;
   float32_t v1SumSquares = 0;
+  float32_t v2Variance;
+  float32_t v2Sum = 0;
+  float32_t v2SumSquares = 0;
+  float32_t v3Variance;
+  float32_t v3Sum = 0;
+  float32_t v3SumSquares = 0;
+  uint32_t index = 0;
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   for (int i = 0; i < 512; i++) {
 	  hydrophone1[2*i + 1] = 0;
@@ -174,6 +180,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim2);
   while (1)
   {
+	  index = 0;
 	  for(int i = 0; i < 1536; i++) {
 		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adcChannels, 4);
 		  while (conversionComplete == 0) {
@@ -187,32 +194,52 @@ int main(void)
       if (i == 3)
         payload3->time = usecs_elapsed;
       switch (curPhone) {
-      HYDROPHONE1:
-        calculateVoltage(adcChannels[0], adcChannels[1], &V1);
-        v1 += V1;
-        v1SumSquares += powf(V1, 2);
-        hydrophone1[2*i] = V1;
-        break;
-      HYDROPHONE2:
-        calculateVoltage(adcChannels[0], adcChannels[2], &V2);
-        hydrophone2[2*i] = V2;
-        break;
-      HYDROPHONE3:
-        calculateVoltage(adcChannels[0], adcChannels[3], &V3);
-        hydrophone3[2*i] = V3;
-        break;
+      	case INIT:
+      		break;
+      	case HYDROPHONE1:
+      		calculateVoltage(adcChannels[0], adcChannels[1], &V1);
+      		v1Sum += V1;
+      		v1SumSquares += powf(V1, 2);
+      		hydrophone1[2*index] = V1;
+      		break;
+        case HYDROPHONE2:
+        	calculateVoltage(adcChannels[0], adcChannels[2], &V2);
+      		v2Sum += V2;
+      		v2SumSquares += powf(V2, 2);
+        	hydrophone2[2*index] = V2;
+        	break;
+        case HYDROPHONE3:
+        	calculateVoltage(adcChannels[0], adcChannels[3], &V3);
+        	hydrophone3[2*index] = V3;
+      		v3Sum += V3;
+      		v3SumSquares += powf(V3, 2);
+        	break;
       }
-	  }
+      if (i % 3 == 2) {
+    	  index++;
+      }
+	 }
     calculateVariance(&v1Sum, &v1SumSquares, &v1Variance);
+    calculateVariance(&v2Sum, &v2SumSquares, &v2Variance);
+    calulateVariance(&v3Sum, &v3SumSquares, &v3Variance);
     payload1->frequency = get_frequency(hydrophone1, 1024, 4705882.3529);
     payload2->frequency = get_frequency(hydrophone2, 1024, 4705882.3529);
     payload3->frequency = get_frequency(hydrophone3, 1024, 4705882.3529);
-		printf("variance of hydrophone 1: %f\r\n", v1Variance);
+    if (v1Variance > 0.001) {
+    	printf("variance of hydrophone 1: %f\r\n", v1Variance);
 		printf("frequency from hydrophone 1: %lu\r\n", payload1->frequency);
 		printf("time from hydrophone 1: %lu\r\n", payload1->time);
-	  //printf("frequency from hydrophone 2: %lu", get_frequency(hydrophone1, 1024, 4705882.35));
-	  //printf("frequency from hydrophone 3: %lu", get_frequency(hydrophone2, 1024, 4705882.35));
-
+    }
+    if (v2Variance > 0.001) {
+    	printf("variance of hydrophone 2: %f\r\n", v2Variance);
+		printf("frequency from hydrophone 2: %lu\r\n", payload2->frequency);
+		printf("time from hydrophone 2: %lu\r\n", payload2->time);
+    }
+    if (v3Variance > 0.001) {
+    	printf("variance of hydrophone 3: %f\r\n", v3Variance);
+		printf("frequency from hydrophone 3: %lu\r\n", payload3->frequency);
+		printf("time from hydrophone 3: %lu\r\n", payload3->time);
+    }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -500,17 +527,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
 	switch (curPhone) {
-  INIT:
-    curPhone = HYDROPHONE1;
-    break;
-  HYDROPHONE1:
-    curPhone = HYDROPHONE2;
-    break;
-  HYDROPHONE2:
-    curPhone = HYDROPHONE3;
-    break;
-  HYDROPHONE3:
-    curPhone = HYDROPHONE1;
+	case INIT:
+		curPhone = HYDROPHONE1;
+		break;
+	case HYDROPHONE1:
+		curPhone = HYDROPHONE2;
+		break;
+	case HYDROPHONE2:
+		curPhone = HYDROPHONE3;
+		break;
+	case HYDROPHONE3:
+		curPhone = HYDROPHONE1;
   }
   conversionComplete = 1;
 }
