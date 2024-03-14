@@ -190,7 +190,7 @@ int main(void)
   while (1)
   {
 	  HAL_Delay(400);
-	  printf("%lu\r\n", usecs_elapsed);
+//	  printf("%lu\r\n", usecs_elapsed);
 	  for(int i = 0; i < 512; i++) {
 		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adcChannels, 4);
 		  while (conversionComplete == 0) {
@@ -213,11 +213,11 @@ int main(void)
 	  v2SumSquares = 0;
 	  frequency = get_frequency(hydrophone0, 1024, 4705882.3529);
 	  if (v2Variance > 0.9) {
-		  printf("variance of hydrophone 1: %f\r\n", v2Variance);
+		  //printf("variance of hydrophone 1: %f\r\n", v2Variance);
 		  Payload *payload1 = createPayload(frequency, usecs_elapsed, HYDROPHONE1);
 		  updateMessage(hmsg1, frequency, usecs_elapsed, 1);
-		  printf("frequency from hydrophone 1: %lu\r\n", payload1->frequency);
-		  printf("time from hydrophone 1: %lu\r\n", payload1->time);
+		  //printf("frequency from hydrophone 1: %lu\r\n", payload1->frequency);
+		  //printf("time from hydrophone 1: %lu\r\n", payload1->time);
 	  }
 	  hpub1.publish(&hmsg1);
 	  nh.spinOnce();
