@@ -751,7 +751,6 @@ Discarded input sections
  .text          0x0000000000000000        0x0 ./Core/Src/ping.o
  .data          0x0000000000000000        0x0 ./Core/Src/ping.o
  .bss           0x0000000000000000        0x0 ./Core/Src/ping.o
- .text.fft      0x0000000000000000      0x100 ./Core/Src/ping.o
  .text.get_total_power
                 0x0000000000000000       0x56 ./Core/Src/ping.o
  .text.get_power_at_target_frequency
@@ -1507,6 +1506,8 @@ Discarded input sections
                 0x0000000000000000       0x50 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.o
  .text.HAL_GetTickFreq
                 0x0000000000000000       0x18 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.o
+ .text.HAL_Delay
+                0x0000000000000000       0x48 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.o
  .text.HAL_SuspendTick
                 0x0000000000000000       0x20 ./Drivers/STM32L4xx_HAL_Driver/Src/stm32l4xx_hal.o
  .text.HAL_ResumeTick

@@ -4158,8 +4158,19 @@ int main(void)
  800222a:	f000 fb7b 	bl	8002924 <_ZL12MX_ADC1_Initv>
   float32_t hydrophone1[1024];
   float32_t hydrophone2[1024];
-  float32_t V2, V3, V4;
-  uint32_t frequency;
+  float32_t hydrophone3[1024];
+  float32_t V1, V2, V3;
+  float32_t v1Variance;
+  float32_t v1Sum = 0;
+ 8000f32:	f107 0388 	add.w	r3, r7, #136	; 0x88
+ 8000f36:	461a      	mov	r2, r3
+ 8000f38:	f04f 0300 	mov.w	r3, #0
+ 8000f3c:	f842 3c78 	str.w	r3, [r2, #-120]
+  float32_t v1SumSquares = 0;
+ 8000f40:	f107 0388 	add.w	r3, r7, #136	; 0x88
+ 8000f44:	461a      	mov	r2, r3
+ 8000f46:	f04f 0300 	mov.w	r3, #0
+ 8000f4a:	f842 3c7c 	str.w	r3, [r2, #-124]
   float32_t v2Variance;
   float32_t v2Sum = 0;
  800222e:	f04f 0300 	mov.w	r3, #0
@@ -4252,6 +4263,27 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  Payload *payload1 = (Payload *) malloc(sizeof(Payload));
+ 8000ff8:	200c      	movs	r0, #12
+ 8000ffa:	f006 fbdb 	bl	80077b4 <malloc>
+ 8000ffe:	4603      	mov	r3, r0
+ 8001000:	f507 5241 	add.w	r2, r7, #12352	; 0x3040
+ 8001004:	f102 0238 	add.w	r2, r2, #56	; 0x38
+ 8001008:	6013      	str	r3, [r2, #0]
+  Payload *payload2 = (Payload *) malloc(sizeof(Payload));
+ 800100a:	200c      	movs	r0, #12
+ 800100c:	f006 fbd2 	bl	80077b4 <malloc>
+ 8001010:	4603      	mov	r3, r0
+ 8001012:	f507 5241 	add.w	r2, r7, #12352	; 0x3040
+ 8001016:	f102 0234 	add.w	r2, r2, #52	; 0x34
+ 800101a:	6013      	str	r3, [r2, #0]
+  Payload *payload3 = (Payload *) malloc(sizeof(Payload));
+ 800101c:	200c      	movs	r0, #12
+ 800101e:	f006 fbc9 	bl	80077b4 <malloc>
+ 8001022:	4603      	mov	r3, r0
+ 8001024:	f507 5241 	add.w	r2, r7, #12352	; 0x3040
+ 8001028:	f102 0230 	add.w	r2, r2, #48	; 0x30
+ 800102c:	6013      	str	r3, [r2, #0]
   HAL_TIM_Base_Start_IT(&htim2);
  8002306:	481b      	ldr	r0, [pc, #108]	; (8002374 <main+0x16c>)
  8002308:	f004 ffdc 	bl	80072c4 <HAL_TIM_Base_Start_IT>
@@ -5010,6 +5042,7 @@ static void MX_ADC1_Init(void)
     Error_Handler();
  80029e8:	f000 f990 	bl	8002d0c <Error_Handler>
   }
+
 
   /** Configure Regular Channel
   */
@@ -6918,7 +6951,23 @@ ros::Publisher hpub3("hydrophone_3", &hmsg3);
 
 08003744 <get_frequency>:
     return freq[target_bin] / sum;
+ 8001d42:	69fa      	ldr	r2, [r7, #28]
+ 8001d44:	69bb      	ldr	r3, [r7, #24]
+ 8001d46:	009b      	lsls	r3, r3, #2
+ 8001d48:	4413      	add	r3, r2
+ 8001d4a:	ed93 7a00 	vldr	s14, [r3]
+ 8001d4e:	edd7 7a0c 	vldr	s15, [r7, #48]	; 0x30
+ 8001d52:	eec7 6a27 	vdiv.f32	s13, s14, s15
+ 8001d56:	46b5      	mov	sp, r6
+ 8001d58:	eef0 7a66 	vmov.f32	s15, s13
 }
+ 8001d5c:	eeb0 0a67 	vmov.f32	s0, s15
+ 8001d60:	373c      	adds	r7, #60	; 0x3c
+ 8001d62:	46bd      	mov	sp, r7
+ 8001d64:	e8bd 8ff0 	ldmia.w	sp!, {r4, r5, r6, r7, r8, r9, sl, fp, pc}
+ 8001d68:	0800aa9c 	.word	0x0800aa9c
+
+08001d6c <get_frequency>:
 
 
 uint32_t get_frequency(float32_t* buff, uint32_t size, float32_t fs)
