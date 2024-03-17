@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #include <Servo.h>
 #include <ros.h>
+#include <std_msgs/String.h>
 #include <auv_msgs/ThrusterMicroseconds.h>
+#include <std_msgs/Float32.h>
 
 // defines all MCU pins
 #define SRG_P_PIN 	2
@@ -27,10 +29,10 @@
 #define TC_7 20
 #define TC_8 21
 
-#define VBAT1_SENSE 22
-#define VBAT2_SENSE 23
+#define VBAT2_SENSE 22
+#define VBAT1_SENSE 23
 
-// defines 8 thursters from ROS for initialization in an array
+// defines 8 thursters for ROS subscribing
 const uint8_t SRG_P 	= auv_msgs::ThrusterMicroseconds::SURGE_PORT;
 const uint8_t SRG_S 	= auv_msgs::ThrusterMicroseconds::SURGE_STAR;
 const uint8_t SWY_BW 	= auv_msgs::ThrusterMicroseconds::SWAY_BOW;
@@ -39,6 +41,18 @@ const uint8_t HVE_BW_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_PORT;
 const uint8_t HVE_BW_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_STAR;
 const uint8_t HVE_ST_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_STAR;
 const uint8_t HVE_ST_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_PORT;
+
+// defines 2 battery voltage sensing and 8 thruster current sensing messages for ROS advertising
+std_msgs::Float32 batt1_voltage_msg;
+std_msgs::Float32 batt2_voltage_msg;
+std_msgs::Float32 thrust1_current_msg;
+std_msgs::Float32 thrust2_current_msg;
+std_msgs::Float32 thrust3_current_msg;
+std_msgs::Float32 thrust4_current_msg;
+std_msgs::Float32 thrust5_current_msg;
+std_msgs::Float32 thrust6_current_msg;
+std_msgs::Float32 thrust7_current_msg;
+std_msgs::Float32 thrust8_current_msg;
 
 // creates array of 8 thrusters
 Servo thrusters[8];
@@ -65,6 +79,7 @@ void updateThrusters(const uint16_t microseconds[8]) {
 	thrusters[HVE_ST_S].writeMicroseconds(microseconds[HVE_ST_S]);
 }
 
+// updates microseconds array with values from ros
 void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
 	memcpy(microseconds, tc.microseconds, 8*sizeof(uint16_t));
 }
@@ -83,19 +98,33 @@ void initThrusters() {
 	updateThrusters(offCommand);
 }
 
+// sets up ros publisher and subscriber nodes
 ros::NodeHandle nh;
 ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
+ros::Publisher batt1_voltage("batt1_voltage", &batt1_voltage_msg);
+ros::Publisher batt2_voltage("batt2_voltage", &batt2_voltage_msg);
+ros::Publisher thrust1_current("thrust1_current", &thrust1_current_msg);
+ros::Publisher thrust2_current("thrust2_current", &thrust2_current_msg);
+ros::Publisher thrust3_current("thrust3_current", &thrust3_current_msg);
+ros::Publisher thrust4_current("thrust4_current", &thrust4_current_msg);
+ros::Publisher thrust5_current("thrust5_current", &thrust5_current_msg);
+ros::Publisher thrust6_current("thrust6_current", &thrust6_current_msg);
+ros::Publisher thrust7_current("thrust7_current", &thrust7_current_msg);
+ros::Publisher thrust8_current("thrust8_current", &thrust8_current_msg);
 
+// kills system by writing high to kill switch transistor
 void killSystem() {
 	digitalWrite(MCU_KS, HIGH);
 	delay(100);
 }
 
+// powers on system by writing low to kill switch transistor
 void powerSystem() {
 	digitalWrite(MCU_KS, LOW);
 	delay(100);
 }
 
+// permanently kills system by writing high to kill switch transistor and flashes led light
 void waterInterrupt() {
 	killSystem();
 	while (true) {
@@ -106,6 +135,7 @@ void waterInterrupt() {
 	}
 }
 
+// senses currents of the 8 thrusters
 void senseCurrent(double Tcurrents[]) {
 	Tcurrents[0] = ((analogRead(TC_1) / 1024.0) * 3.3) / (0.005 * 50);
 	Tcurrents[1] = ((analogRead(TC_2) / 1024.0) * 3.3) / (0.005 * 50);
@@ -117,16 +147,47 @@ void senseCurrent(double Tcurrents[]) {
 	Tcurrents[7] = ((analogRead(TC_8) / 1024.0) * 3.3) / (0.005 * 50);
 }
 
+// senses the voltages of the 2 batteries
 void senseVoltage(float Bvoltages[]) {
 	Bvoltages[0] = analogRead(VBAT1_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
 	Bvoltages[1] = analogRead(VBAT2_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
 }
 
+// updates values sensed onto the ros nodes and publishes them
+void publishVoltagesAndCurrents() {
+	senseCurrent(Tcurrents);
+	senseVoltage(Bvoltages);
+
+	batt1_voltage_msg.data = Bvoltages[0];
+	batt2_voltage_msg.data = Bvoltages[1];
+	thrust1_current_msg.data = Tcurrents[0];
+	thrust2_current_msg.data = Tcurrents[1];
+	thrust3_current_msg.data = Tcurrents[2];
+	thrust4_current_msg.data = Tcurrents[3];
+	thrust5_current_msg.data = Tcurrents[4];
+	thrust6_current_msg.data = Tcurrents[5];
+	thrust7_current_msg.data = Tcurrents[6];
+	thrust8_current_msg.data = Tcurrents[7];
+	
+	batt1_voltage.publish( &batt1_voltage_msg );
+	batt2_voltage.publish( &batt2_voltage_msg );
+	thrust1_current.publish( &thrust1_current_msg );
+	thrust2_current.publish( &thrust2_current_msg );
+	thrust3_current.publish( &thrust3_current_msg );
+	thrust4_current.publish( &thrust4_current_msg );
+	thrust5_current.publish( &thrust5_current_msg );
+	thrust6_current.publish( &thrust6_current_msg );
+	thrust7_current.publish( &thrust7_current_msg );
+	thrust8_current.publish( &thrust8_current_msg );
+}
+
 void setup() {
 	initThrusters();
-	
-	//pinMode(WATER_DETECTED, INPUT_PULLUP);
-	//pinMode(MCU_KS, OUTPUT);
+
+	pinMode(MCU_KS, OUTPUT);
+	pinMode(TEENSY_LED, OUTPUT);
+	// pinMode(WATER_DETECTED, INPUT_PULLUP);
+	// attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
 	pinMode(TC_1, INPUT);
 	pinMode(TC_2, INPUT);
 	pinMode(TC_3, INPUT);
@@ -137,15 +198,27 @@ void setup() {
 	pinMode(TC_8, INPUT);
 	pinMode(VBAT1_SENSE, INPUT);
 	pinMode(VBAT2_SENSE, INPUT);
-	pinMode(TEENSY_LED, OUTPUT);
 
-	//attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
-
-	nh.subscribe(sub);
 	nh.initNode();
+	nh.subscribe(sub);
+	nh.advertise(batt1_voltage);
+	nh.advertise(batt2_voltage);
+	nh.advertise(thrust1_current);
+	nh.advertise(thrust2_current);
+	nh.advertise(thrust3_current);
+	nh.advertise(thrust4_current);
+	nh.advertise(thrust5_current);
+	nh.advertise(thrust6_current);
+	nh.advertise(thrust7_current);
+	nh.advertise(thrust8_current);
 }
 
 void loop() {
 	updateThrusters(microseconds);
-	nh.spinOnce(); 
+
+	publishVoltagesAndCurrents();
+	
+	nh.spinOnce();
+	
+	delay(10);
 }
