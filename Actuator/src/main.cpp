@@ -10,7 +10,8 @@
 
 // constant data types
 bool contact = 0;
-bool close = 0;
+bool closing = 0;
+bool new_close_msg = 0;
 
 // variables
 int contact_current = 20;
@@ -22,12 +23,18 @@ float current = 0;
 std_msgs::Bool grabber_contact_msg;
 std_msgs::Bool close_msg;
 
+// update var from subscribed message
+void update_close_msg( const std_msgs::Bool &close){
+  closing = close.data;
+  new_close_msg = true;
+}
+
 // set ros pub/subscriber
 ros::NodeHandle nh;
 ros::Publisher grabber_contact("/actuators/grabber/contact", &grabber_contact_msg);
 ros::Subscriber<std_msgs::Bool> sub("/actuators/grabber/close", &update_close_msg);
 
-// creat servo object
+// create servo object
 Servo servo1;  // create servo object to control a servo 
                 // a maximum of eight servo objects can be created 
  
@@ -59,8 +66,13 @@ void loop()
 {
   //nh.spinOnce(); // happens in function
 
-  if (grabber_contact_msg.data == 1) {
-    close_msg();
+  if (new_close_msg == 1) {
+    if (closing == 1) {
+      close_actuator();
+    } else if (closing == 0) {
+      open_actuator();
+    }
+    new_close_msg = 0;  // clear flag
   }
   delay(10);
   // check for messages
@@ -68,11 +80,7 @@ void loop()
 
 }
 
-void update_close_msg( const std::msgsBool& close){
-  close = close.data;
-}
-
-void close( const std_msgs::Bool& close_msg ) {
+void close_actuator() {
   for (pos = 0; pos <= max_position; pos += 1) { // position maximum should be set to whatever would see grabber fully closed
     
     // check current reading
@@ -82,13 +90,13 @@ void close( const std_msgs::Bool& close_msg ) {
     // use current reading to check if made contact
     if(currentReading > contact_current){
       grabber_contact_msg.data = 1; // contact message is TRUE
-      grabber_contact.publish( &grabber_contact_msg.data ) // publish contact message
+      grabber_contact.publish( &grabber_contact_msg ); // publish contact message
       digitalWrite(LED_BUILTIN, HIGH);
       // STOP THE SERVO
     }
     else{ // servo keeps going
       grabber_contact_msg.data = 0; // contact message is FALSE
-      grabber_contact.publish( &grabber_contact_msg.data ) // publish contact message
+      grabber_contact.publish( &grabber_contact_msg ); // publish contact message
       digitalWrite(LED_BUILTIN, LOW);
     }
     
@@ -100,36 +108,31 @@ void close( const std_msgs::Bool& close_msg ) {
   }
 
 }
-//void loop()
-//{
 
-  //for (pos = 0; pos <= 180; pos += 1) { // goes from 0 degrees to 180 degrees
+void open_actuator() {
+  for (pos = max_position; pos >= 0; pos -= 1) { // position maximum should be set to whatever would see grabber fully closed
     
-    //int currentReading = analogRead(CURRENT_PIN);
-    //Serial.println(currentReading);
+    // check current reading
+    int currentReading = analogRead(CURRENT_PIN);
+    Serial.println(currentReading);
 
-    //if(currentReading > 20){
-
-      //contact = 1;
-      //digitalWrite(LED_BUILTIN, HIGH);
-    //}
-    //else{
-     // contact = 0;
-      //digitalWrite(LED_BUILTIN, LOW);
-    //}
-    // in steps of 1 degree
-    //grabber_contact_msg.data = contact;
-
-    //grabber_contact.publish( &grabber_contact_msg );
-
-    //nh.spinOnce();
-
-
-    //myservo.write(pos);              // tell servo to go to position in variable 'pos'
-    //delay(15);                       // waits 15ms for the servo to reach the position
-  //}
-
-
-
+    // use current reading to check if made contact
+    if(currentReading > contact_current){
+      grabber_contact_msg.data = 1; // contact message is TRUE
+      grabber_contact.publish( &grabber_contact_msg ); // publish contact message
+      digitalWrite(LED_BUILTIN, HIGH);
+    }
+    else{ // servo keeps going
+      grabber_contact_msg.data = 0; // contact message is FALSE
+      grabber_contact.publish( &grabber_contact_msg ); // publish contact message
+      digitalWrite(LED_BUILTIN, LOW);
+    }
+    
+    // ros thingie to make happen
+    nh.spinOnce();
+    // move servo
+    servo1.write(pos);              // tell servo to go to position in variable 'pos'
+    delay(15);                       // waits 15ms for the servo to reach the position
+  }
 
 }
