@@ -31,8 +31,8 @@ void update_close_msg( const std_msgs::Bool &close){
 
 // set ros pub/subscriber
 ros::NodeHandle nh;
-ros::Publisher grabber_contact("/actuators/grabber/contact", &grabber_contact_msg);
-ros::Subscriber<std_msgs::Bool> sub("/actuators/grabber/close", &update_close_msg);
+ros::Publisher grabber_contact("contact", &grabber_contact_msg);
+ros::Subscriber<std_msgs::Bool> sub_close("close", &update_close_msg);
 
 // create servo object
 Servo servo1;  // create servo object to control a servo 
@@ -50,6 +50,7 @@ void setup()
 { 
   // set ros
   nh.initNode();
+  nh.subscribe(sub_close);
   nh.advertise(grabber_contact);
 
   // set data rate
@@ -74,6 +75,7 @@ void loop()
     }
     new_close_msg = 0;  // clear flag
   }
+  nh.spinOnce();
   delay(10);
   // check for messages
   // if statements
