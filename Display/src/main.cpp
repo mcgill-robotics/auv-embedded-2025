@@ -33,6 +33,9 @@
 #define ILI9341_ROTATION_180 2
 #define ILI9341_ROTATION_270 3
 
+// Define the number of samples to use in the moving average
+#define MOVING_AVERAGE_SAMPLES 10
+
 // Initialize display object
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 
@@ -60,7 +63,52 @@ float thrusters_old[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 float devices_old[] = { -1, -1, -1, -1, -1, -1, -1 };
 String status_old = "";
 String quaternions_old[] = { "", "", "", "" };
-boolean init_startup = true;
+
+// Status of batteries
+boolean BATT1_EMPTY = false;
+boolean BATT2_EMPTY = false;
+
+// Arrays to store previous voltage readings for moving average
+float voltage_buffer1[MOVING_AVERAGE_SAMPLES];
+int voltage_buffer_index1 = 0;
+float voltage_buffer2[MOVING_AVERAGE_SAMPLES];
+int voltage_buffer_index2 = 0;
+
+// Function to perform moving average filtering for battery 1
+float movingAverage1(float newValue) {
+  static float sum = 0;
+
+  // Subtract oldest value from sum
+  sum -= voltage_buffer2[voltage_buffer_index2];
+
+  // Add new value to sum
+  voltage_buffer2[voltage_buffer_index2] = newValue;
+  sum += newValue;
+
+  // Move to the next index in the buffer
+  voltage_buffer_index2 = (voltage_buffer_index2 + 1) % MOVING_AVERAGE_SAMPLES;
+
+  // Calculate and return the average
+  return sum / MOVING_AVERAGE_SAMPLES;
+}
+
+// Function to perform moving average filtering for battery 2
+float movingAverage2(float newValue) {
+  static float sum = 0;
+
+  // Subtract oldest value from sum
+  sum -= voltage_buffer1[voltage_buffer_index1];
+
+  // Add new value to sum
+  voltage_buffer1[voltage_buffer_index1] = newValue;
+  sum += newValue;
+
+  // Move to the next index in the buffer
+  voltage_buffer_index1 = (voltage_buffer_index1 + 1) % MOVING_AVERAGE_SAMPLES;
+
+  // Calculate and return the average
+  return sum / MOVING_AVERAGE_SAMPLES;
+}
 
 // Function to initialize main screen layout
 void initMainScreen() {
@@ -113,52 +161,6 @@ void initMainScreen() {
   // Draws full rectangle on edges
   tft.drawRect(0, 0, WIDTH, HEIGHT, BLACK);
 }
-
-// Define the number of samples to use in the moving average
-#define MOVING_AVERAGE_SAMPLES 10
-
-// Array to store previous voltage readings for moving average
-float voltage_buffer1[MOVING_AVERAGE_SAMPLES];
-int voltage_buffer_index1 = 0;
-
-float voltage_buffer2[MOVING_AVERAGE_SAMPLES];
-int voltage_buffer_index2 = 0;
-
-// Function to perform moving average filtering
-float movingAverage2(float newValue) {
-  static float sum = 0;
-
-  // Subtract oldest value from sum
-  sum -= voltage_buffer1[voltage_buffer_index1];
-
-  // Add new value to sum
-  voltage_buffer1[voltage_buffer_index1] = newValue;
-  sum += newValue;
-
-  // Move to the next index in the buffer
-  voltage_buffer_index1 = (voltage_buffer_index1 + 1) % MOVING_AVERAGE_SAMPLES;
-
-  // Calculate and return the average
-  return sum / MOVING_AVERAGE_SAMPLES;
-}
-float movingAverage1(float newValue) {
-  static float sum = 0;
-
-  // Subtract oldest value from sum
-  sum -= voltage_buffer2[voltage_buffer_index2];
-
-  // Add new value to sum
-  voltage_buffer2[voltage_buffer_index2] = newValue;
-  sum += newValue;
-
-  // Move to the next index in the buffer
-  voltage_buffer_index2 = (voltage_buffer_index2 + 1) % MOVING_AVERAGE_SAMPLES;
-
-  // Calculate and return the average
-  return sum / MOVING_AVERAGE_SAMPLES;
-}
-boolean BATT1_EMPTY = false;
-boolean BATT2_EMPTY = false;
 
 // Function to update battery 1 display
 void batt1(float V1) {
@@ -512,8 +514,8 @@ std_msgs::Float32 depth_msg;
 // Publishes depth
 // Subscribes to battery voltages, thruster statuses, device statuses, status message, and quaternions
 ros::Publisher DEPTH("depth", &depth_msg);
-ros::Subscriber<std_msgs::Float32> BATT1("/batt1_voltage", &batt1MessageCallback);
-ros::Subscriber<std_msgs::Float32> BATT2("/batt2_voltage", &batt2MessageCallback);
+ros::Subscriber<std_msgs::Float32> BATT1("/batteries/voltage/1", &batt1MessageCallback);
+ros::Subscriber<std_msgs::Float32> BATT2("/batteries/voltage/2", &batt2MessageCallback);
 ros::Subscriber<std_msgs::Int32> THRUSTER1("/thrusters/status/1", &thruster1MessageCallback);
 ros::Subscriber<std_msgs::Int32> THRUSTER2("/thrusters/status/2", &thruster2MessageCallback);
 ros::Subscriber<std_msgs::Int32> THRUSTER3("/thrusters/status/3", &thruster3MessageCallback);
@@ -591,15 +593,12 @@ void setup() {
   // Advertise ROS publisher
   nh.advertise(DEPTH);
 
+  // Initializes voltage buffer arrays
   for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
     voltage_buffer1[i] = 0;
-  }
-
-  for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
     voltage_buffer2[i] = 0;
   }
 }
-
 
 void loop() {
   // Handle ROS communication
@@ -617,8 +616,7 @@ void loop() {
   status(status_new);
   quaternions(quaternions_new[0], quaternions_new[1], quaternions_new[2], quaternions_new[3]);
 
-  init_startup = false;
-
   // Delay for stability
   delay(10);
 }
+
