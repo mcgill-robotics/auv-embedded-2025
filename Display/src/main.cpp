@@ -59,6 +59,7 @@ float thrusters_old[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 float devices_old[] = { -1, -1, -1, -1, -1, -1, -1 };
 String status_old = "";
 String quaternions_old[] = { "", "", "", "" };
+boolean init_startup = true;
 
 // Function to initialize main screen layout
 void initMainScreen() {
@@ -112,18 +113,31 @@ void initMainScreen() {
   tft.drawRect(0, 0, WIDTH, HEIGHT, BLACK);
 }
 
+// Function to perform exponential smoothing
+float smooth(float currentValue, float previousValue, float alpha) {
+  return alpha * currentValue + (1 - alpha) * previousValue;
+}
+
 // Function to update battery 1 display
 void batt1(float V1) {
-  voltages_new[0] = V1;
+  char buffer[6];
+  dtostrf(V1, 4, 1, buffer);
+
+  V1 = atof(buffer);
+
+  voltages_new[0] = smooth(V1, voltages_old[0], 0.1); // Adjust alpha value as needed
   if (voltages_old[0] != voltages_new[0]) {
     voltages_old[0] = V1;
-    if (V1 <= 12.6) {
-      tft.setTextColor(BLACK);
-      batt_colours[0] = WHITE;
-      tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
-      tft.setCursor(8, 25);
-      tft.setTextSize(5);
-      tft.println("EMPTY");
+    float temp_old_v1 = voltages_old[0];
+    if (V1 <= 12.8) {
+      if (temp_old_v1 > 12.8 || init_startup) {
+        tft.setTextColor(BLACK);
+        batt_colours[0] = WHITE;
+        tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
+        tft.setCursor(8, 25);
+        tft.setTextSize(5);
+        tft.println("EMPTY");
+      }
       return;
     } else if (V1 <= 14.8) {
       batt_colours[0] = RED;
@@ -133,9 +147,9 @@ void batt1(float V1) {
       batt_colours[0] = GREEN;
     }
 
-    char buffer[6];
-    dtostrf(V1, 4, 1, buffer);
+    voltages_old[0] = V1;
 
+    tft.setTextColor(WHITE);
     tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
     tft.setCursor(10, 20);
     tft.setTextSize(6);
@@ -145,16 +159,24 @@ void batt1(float V1) {
 
 // Function to update battery 2 display
 void batt2(float V2) {
-  voltages_new[1] = V2;
+  char buffer[6];
+  dtostrf(V2, 4, 1, buffer);
+
+  V2 = atof(buffer);
+
+  voltages_new[1] = smooth(V2, voltages_old[1], 0.1); // Adjust alpha value as needed
+  float temp_old_v2 = voltages_old[1];
   if (voltages_old[1] != voltages_new[1]) {
     voltages_old[1] = V2;
-    if (V2 <= 12.6) {
-      tft.setTextColor(BLACK);
-      batt_colours[1] = WHITE;
-      tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
-      tft.setCursor(WIDTH / 2 + 8, 25);
-      tft.setTextSize(5);
-      tft.println("EMPTY");
+    if (V2 <= 12.8) {
+      if (temp_old_v2 > 12.8 || init_startup) {
+        tft.setTextColor(BLACK);
+        batt_colours[1] = WHITE;
+        tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
+        tft.setCursor(WIDTH / 2 + 8, 25);
+        tft.setTextSize(5);
+        tft.println("EMPTY");
+      }
       return;
     } else if (V2 <= 14.8) {
       batt_colours[1] = RED;
@@ -164,9 +186,9 @@ void batt2(float V2) {
       batt_colours[1] = GREEN;
     }
 
-    char buffer[6];
-    dtostrf(V2, 4, 1, buffer);
+    voltages_old[1] = V2;
 
+    tft.setTextColor(WHITE);
     tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
     tft.setCursor(WIDTH / 2 + 10, 20);
     tft.setTextSize(6);
@@ -444,8 +466,8 @@ std_msgs::Float32 depth_msg;
 // Publishes depth
 // Subscribes to battery voltages, thruster statuses, device statuses, status message, and quaternions
 ros::Publisher DEPTH("depth", &depth_msg);
-ros::Subscriber<std_msgs::Float32> BATT1("/batteries/voltage/1", &batt1MessageCallback);
-ros::Subscriber<std_msgs::Float32> BATT2("/batteries/voltage/2", &batt2MessageCallback);
+ros::Subscriber<std_msgs::Float32> BATT1("/batt1_voltage", &batt1MessageCallback);
+ros::Subscriber<std_msgs::Float32> BATT2("/batt2_voltage", &batt2MessageCallback);
 ros::Subscriber<std_msgs::Int32> THRUSTER1("/thrusters/status/1", &thruster1MessageCallback);
 ros::Subscriber<std_msgs::Int32> THRUSTER2("/thrusters/status/2", &thruster2MessageCallback);
 ros::Subscriber<std_msgs::Int32> THRUSTER3("/thrusters/status/3", &thruster3MessageCallback);
@@ -539,6 +561,8 @@ void loop() {
   devices(devices_new[0], devices_new[1], devices_new[2], devices_new[3], devices_new[4], devices_new[5], devices_new[6]);
   status(status_new);
   quaternions(quaternions_new[0], quaternions_new[1], quaternions_new[2], quaternions_new[3]);
+
+  init_startup = false;
 
   // Delay for stability
   delay(10);
