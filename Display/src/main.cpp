@@ -157,6 +157,8 @@ float movingAverage1(float newValue) {
   // Calculate and return the average
   return sum / MOVING_AVERAGE_SAMPLES;
 }
+boolean BATT1_EMPTY = false;
+boolean BATT2_EMPTY = false;
 
 // Function to update battery 1 display
 void batt1(float V1) {
@@ -167,15 +169,15 @@ void batt1(float V1) {
   voltages_new[0] = V1;
   if (voltages_old[0] != voltages_new[0]) {
     voltages_old[0] = voltages_new[0];
-    float temp_old_v1 = voltages_old[0];
     if (V1 <= 12.8) {
-      if (temp_old_v1 > 12.8 || init_startup) {
+      if (!BATT1_EMPTY) {
         tft.setTextColor(BLACK);
         batt_colours[0] = WHITE;
         tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
         tft.setCursor(8, 25);
         tft.setTextSize(5);
         tft.println("EMPTY");
+        BATT1_EMPTY = true;
       }
       return;
     } else if (V1 <= 14.8) {
@@ -194,6 +196,8 @@ void batt1(float V1) {
     tft.setCursor(10, 20);
     tft.setTextSize(6);
     tft.println(buffer);
+    
+    BATT1_EMPTY = false;
   }
 }
 
@@ -206,15 +210,15 @@ void batt2(float V2) {
   voltages_new[1] = V2;
   if (voltages_old[1] != voltages_new[1]) {
     voltages_old[1] = voltages_new[1];
-    float temp_old_v2 = voltages_old[1];
     if (V2 <= 12.8) {
-      if (temp_old_v2 > 12.8 || init_startup) {
+      if (!BATT2_EMPTY) {
         tft.setTextColor(BLACK);
         batt_colours[1] = WHITE;
         tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
         tft.setCursor(WIDTH / 2 + 8, 25);
         tft.setTextSize(5);
         tft.println("EMPTY");
+        BATT2_EMPTY = true;
       }
       return;
     } else if (V2 <= 14.8) {
@@ -233,6 +237,8 @@ void batt2(float V2) {
     tft.setCursor(WIDTH / 2 + 10, 20);
     tft.setTextSize(6);
     tft.println(buffer);
+
+    BATT2_EMPTY = false;
   }
 }
 
