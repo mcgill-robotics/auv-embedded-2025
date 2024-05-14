@@ -7,6 +7,7 @@
 #include <std_msgs/Float32.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
+#include <cmath>
 
 // Define pin configurations
 #define TFT_DC 9
@@ -113,21 +114,59 @@ void initMainScreen() {
   tft.drawRect(0, 0, WIDTH, HEIGHT, BLACK);
 }
 
-// Function to perform exponential smoothing
-float smooth(float currentValue, float previousValue, float alpha) {
-  return alpha * currentValue + (1 - alpha) * previousValue;
+// Define the number of samples to use in the moving average
+#define MOVING_AVERAGE_SAMPLES 10
+
+// Array to store previous voltage readings for moving average
+float voltage_buffer1[MOVING_AVERAGE_SAMPLES];
+int voltage_buffer_index1 = 0;
+
+float voltage_buffer2[MOVING_AVERAGE_SAMPLES];
+int voltage_buffer_index2 = 0;
+
+// Function to perform moving average filtering
+float movingAverage2(float newValue) {
+  static float sum = 0;
+
+  // Subtract oldest value from sum
+  sum -= voltage_buffer1[voltage_buffer_index1];
+
+  // Add new value to sum
+  voltage_buffer1[voltage_buffer_index1] = newValue;
+  sum += newValue;
+
+  // Move to the next index in the buffer
+  voltage_buffer_index1 = (voltage_buffer_index1 + 1) % MOVING_AVERAGE_SAMPLES;
+
+  // Calculate and return the average
+  return sum / MOVING_AVERAGE_SAMPLES;
+}
+float movingAverage1(float newValue) {
+  static float sum = 0;
+
+  // Subtract oldest value from sum
+  sum -= voltage_buffer2[voltage_buffer_index2];
+
+  // Add new value to sum
+  voltage_buffer2[voltage_buffer_index2] = newValue;
+  sum += newValue;
+
+  // Move to the next index in the buffer
+  voltage_buffer_index2 = (voltage_buffer_index2 + 1) % MOVING_AVERAGE_SAMPLES;
+
+  // Calculate and return the average
+  return sum / MOVING_AVERAGE_SAMPLES;
 }
 
 // Function to update battery 1 display
 void batt1(float V1) {
-  char buffer[6];
-  dtostrf(V1, 4, 1, buffer);
+  V1 = round(V1 * 10) / 10;
+  V1 = movingAverage1(V1);
+  V1 = round(V1 * 10) / 10;
 
-  V1 = atof(buffer);
-
-  voltages_new[0] = smooth(V1, voltages_old[0], 0.1); // Adjust alpha value as needed
+  voltages_new[0] = V1;
   if (voltages_old[0] != voltages_new[0]) {
-    voltages_old[0] = V1;
+    voltages_old[0] = voltages_new[0];
     float temp_old_v1 = voltages_old[0];
     if (V1 <= 12.8) {
       if (temp_old_v1 > 12.8 || init_startup) {
@@ -147,7 +186,8 @@ void batt1(float V1) {
       batt_colours[0] = GREEN;
     }
 
-    voltages_old[0] = V1;
+    char buffer[6];
+    dtostrf(V1, 4, 1, buffer);
 
     tft.setTextColor(WHITE);
     tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
@@ -159,15 +199,14 @@ void batt1(float V1) {
 
 // Function to update battery 2 display
 void batt2(float V2) {
-  char buffer[6];
-  dtostrf(V2, 4, 1, buffer);
+  V2 = round(V2 * 10) / 10;
+  V2 = movingAverage2(V2);
+  V2 = round(V2 * 10) / 10;
 
-  V2 = atof(buffer);
-
-  voltages_new[1] = smooth(V2, voltages_old[1], 0.1); // Adjust alpha value as needed
-  float temp_old_v2 = voltages_old[1];
+  voltages_new[1] = V2;
   if (voltages_old[1] != voltages_new[1]) {
-    voltages_old[1] = V2;
+    voltages_old[1] = voltages_new[1];
+    float temp_old_v2 = voltages_old[1];
     if (V2 <= 12.8) {
       if (temp_old_v2 > 12.8 || init_startup) {
         tft.setTextColor(BLACK);
@@ -186,7 +225,8 @@ void batt2(float V2) {
       batt_colours[1] = GREEN;
     }
 
-    voltages_old[1] = V2;
+    char buffer[6];
+    dtostrf(V2, 4, 1, buffer);
 
     tft.setTextColor(WHITE);
     tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
@@ -544,7 +584,16 @@ void setup() {
 
   // Advertise ROS publisher
   nh.advertise(DEPTH);
+
+  for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
+    voltage_buffer1[i] = 0;
+  }
+
+  for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
+    voltage_buffer2[i] = 0;
+  }
 }
+
 
 void loop() {
   // Handle ROS communication
