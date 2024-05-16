@@ -128,12 +128,16 @@ void powerSystem() {
 
 // permanently kills system by writing high to kill switch transistor and flashes led light
 void waterInterrupt() {
-	killSystem();
-	while (true) {
-		digitalWrite(TEENSY_LED, HIGH);
-		delay(500);
-		digitalWrite(TEENSY_LED, LOW);
-		delay(500);
+	delay(100);
+
+	if (digitalRead(WATER_DETECTED)) {
+		killSystem();
+		while (true) {
+			digitalWrite(TEENSY_LED, HIGH);
+			delay(500);
+			digitalWrite(TEENSY_LED, LOW);
+			delay(500);
+		}
 	}
 }
 
