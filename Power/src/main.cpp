@@ -15,7 +15,7 @@
 #define HVE_ST_P_PIN 	9
 
 #define MCU_KS 10
-#define WATER_DETECTED 12
+#define WATER_DETECTED 1
 
 #define TEENSY_LED 13
 
@@ -196,10 +196,10 @@ void publishVoltagesAndTStatus() {
 void setup() {
 	initThrusters();
 
-	// pinMode(MCU_KS, OUTPUT);
-	// pinMode(TEENSY_LED, OUTPUT);
-	// pinMode(WATER_DETECTED, INPUT_PULLUP);
-	// attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
+	pinMode(MCU_KS, OUTPUT);
+	pinMode(TEENSY_LED, OUTPUT);
+	pinMode(WATER_DETECTED, INPUT_PULLUP);
+	attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
 	// pinMode(TC_1, INPUT);
 	// pinMode(TC_2, INPUT);
 	// pinMode(TC_3, INPUT);
