@@ -5,17 +5,17 @@
 #include <std_msgs/Int32.h>
 
 // defines all MCU pins
-#define SRG_P_PIN 	2
-#define SRG_S_PIN	3
-#define SWY_BW_PIN 	4
-#define SWY_ST_PIN 	5
-#define HVE_BW_P_PIN 	6
-#define HVE_BW_S_PIN 	7
-#define HVE_ST_S_PIN 	8
-#define HVE_ST_P_PIN 	9
+#define FRONT_L_PIN 	2
+#define FRONT_R_PIN	3
+#define BACK_L_PIN 	4
+#define BACK_R_PIN 	5
+#define HEAVE_FRONT_L_PIN 	6
+#define HEAVE_FRONT_R_PIN 	7
+#define HEAVE_BACK_L_PIN 	8
+#define HEAVE_BACK_R_PIN 	9
 
 #define MCU_KS 10
-#define WATER_DETECTED 1
+// #define WATER_DETECTED 1
 
 #define TEENSY_LED 13
 
@@ -32,14 +32,14 @@
 #define VBAT2_SENSE 23
 
 // defines 8 thursters for ROS subscribing
-const uint8_t SRG_P 	= auv_msgs::ThrusterMicroseconds::SURGE_PORT;
-const uint8_t SRG_S 	= auv_msgs::ThrusterMicroseconds::SURGE_STAR;
-const uint8_t SWY_BW 	= auv_msgs::ThrusterMicroseconds::SWAY_BOW;
-const uint8_t SWY_ST 	= auv_msgs::ThrusterMicroseconds::SWAY_STERN;
-const uint8_t HVE_BW_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_PORT;
-const uint8_t HVE_BW_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_BOW_STAR;
-const uint8_t HVE_ST_S 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_STAR;
-const uint8_t HVE_ST_P 	= auv_msgs::ThrusterMicroseconds::HEAVE_STERN_PORT;
+const uint8_t FRONT_L 	= auv_msgs::ThrusterMicroseconds::FRONT_LEFT;
+const uint8_t FRONT_R 	= auv_msgs::ThrusterMicroseconds::FRONT_RIGHT;
+const uint8_t BACK_L 	= auv_msgs::ThrusterMicroseconds::BACK_LEFT;
+const uint8_t BACK_R 	= auv_msgs::ThrusterMicroseconds::BACK_RIGHT;
+const uint8_t HEAVE_FRONT_L 	= auv_msgs::ThrusterMicroseconds::HEAVE_FRONT_LEFT;
+const uint8_t HEAVE_FRONT_R 	= auv_msgs::ThrusterMicroseconds::HEAVE_FRONT_RIGHT;
+const uint8_t HEAVE_BACK_L 	= auv_msgs::ThrusterMicroseconds::HEAVE_BACK_LEFT;
+const uint8_t HEAVE_BACK_R 	= auv_msgs::ThrusterMicroseconds::HEAVE_BACK_RIGHT;
 
 // defines 2 battery voltage sensing and 8 thruster current sensing messages for ROS advertising
 std_msgs::Float32 batt1_voltage_msg;
@@ -71,14 +71,14 @@ float Bvoltages[2];
 
 // updates thrusters' pwm signals from array
 void updateThrusters(const uint16_t microseconds[8]) {
-	thrusters[SRG_P].writeMicroseconds(microseconds[SRG_P]);
-	thrusters[SRG_S].writeMicroseconds(microseconds[SRG_S]);
-	thrusters[SWY_BW].writeMicroseconds(microseconds[SWY_BW]);
-	thrusters[SWY_ST].writeMicroseconds(microseconds[SWY_ST]);
-	thrusters[HVE_BW_P].writeMicroseconds(microseconds[HVE_BW_P]);
-	thrusters[HVE_BW_S].writeMicroseconds(microseconds[HVE_BW_S]);
-	thrusters[HVE_ST_P].writeMicroseconds(microseconds[HVE_ST_P]);
-	thrusters[HVE_ST_S].writeMicroseconds(microseconds[HVE_ST_S]);
+	thrusters[FRONT_L].writeMicroseconds(microseconds[FRONT_L]);
+	thrusters[FRONT_R].writeMicroseconds(microseconds[FRONT_R]);
+	thrusters[BACK_L].writeMicroseconds(microseconds[BACK_L]);
+	thrusters[BACK_R].writeMicroseconds(microseconds[BACK_R]);
+	thrusters[HEAVE_FRONT_L].writeMicroseconds(microseconds[HEAVE_FRONT_L]);
+	thrusters[HEAVE_FRONT_R].writeMicroseconds(microseconds[HEAVE_FRONT_R]);
+	thrusters[HEAVE_BACK_R].writeMicroseconds(microseconds[HEAVE_BACK_R]);
+	thrusters[HEAVE_BACK_L].writeMicroseconds(microseconds[HEAVE_BACK_L]);
 }
 
 // updates microseconds array with values from ros
@@ -88,14 +88,14 @@ void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
 
 // attaches and arms thrusters
 void initThrusters() {
-	thrusters[SRG_P].attach(SRG_P_PIN);
-	thrusters[SRG_S].attach(SRG_S_PIN);
-	thrusters[SWY_BW].attach(SWY_BW_PIN);
-	thrusters[SWY_ST].attach(SWY_ST_PIN);
-	thrusters[HVE_BW_P].attach(HVE_BW_P_PIN);
-	thrusters[HVE_BW_S].attach(HVE_BW_S_PIN);
-	thrusters[HVE_ST_S].attach(HVE_ST_S_PIN);
-	thrusters[HVE_ST_P].attach(HVE_ST_P_PIN);
+	thrusters[FRONT_L].attach(FRONT_L_PIN);
+	thrusters[FRONT_R].attach(FRONT_R_PIN);
+	thrusters[BACK_L].attach(BACK_L_PIN);
+	thrusters[BACK_R].attach(BACK_R_PIN);
+	thrusters[HEAVE_FRONT_L].attach(HEAVE_FRONT_L_PIN);
+	thrusters[HEAVE_FRONT_R].attach(HEAVE_FRONT_R_PIN);
+	thrusters[HEAVE_BACK_L].attach(HEAVE_BACK_L_PIN);
+	thrusters[HEAVE_BACK_R].attach(HEAVE_BACK_R_PIN);
 
 	updateThrusters(offCommand);
 }
@@ -127,19 +127,19 @@ void powerSystem() {
 }
 
 // permanently kills system by writing high to kill switch transistor and flashes led light
-void waterInterrupt() {
-	delay(100);
+// void waterInterrupt() {
+// 	delay(100);
 
-	if (digitalRead(WATER_DETECTED)) {
-		// killSystem();
-		while (true) {
-			digitalWrite(TEENSY_LED, HIGH);
-			delay(500);
-			digitalWrite(TEENSY_LED, LOW);
-			delay(500);
-		}
-	}
-}
+// 	if (digitalRead(WATER_DETECTED)) {
+// 		// killSystem();
+// 		while (true) {
+// 			digitalWrite(TEENSY_LED, HIGH);
+// 			delay(500);
+// 			digitalWrite(TEENSY_LED, LOW);
+// 			delay(500);
+// 		}
+// 	}
+// }
 
 // senses currents of the 8 thrusters
 void senseCurrent(double Tcurrents[]) {
@@ -202,8 +202,8 @@ void setup() {
 
 	pinMode(MCU_KS, OUTPUT);
 	pinMode(TEENSY_LED, OUTPUT);
-	pinMode(WATER_DETECTED, INPUT_PULLUP);
-	attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
+	// pinMode(WATER_DETECTED, INPUT_PULLUP);
+	// attachInterrupt(digitalPinToInterrupt(WATER_DETECTED), waterInterrupt, RISING);
 	// pinMode(TC_1, INPUT);
 	// pinMode(TC_2, INPUT);
 	// pinMode(TC_3, INPUT);
