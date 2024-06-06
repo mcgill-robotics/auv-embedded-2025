@@ -131,7 +131,7 @@ void waterInterrupt() {
 	delay(100);
 
 	if (digitalRead(WATER_DETECTED)) {
-		killSystem();
+		// killSystem();
 		while (true) {
 			digitalWrite(TEENSY_LED, HIGH);
 			delay(500);
