@@ -16,7 +16,7 @@ namespace gazebo_msgs
     public:
       typedef std_msgs::Header _header_type;
       _header_type header;
-      typedef float _real_time_factor_type;
+      typedef double _real_time_factor_type;
       _real_time_factor_type real_time_factor;
       uint32_t sensors_length;
       typedef gazebo_msgs::SensorPerformanceMetric _sensors_type;
@@ -34,7 +34,20 @@ namespace gazebo_msgs
     {
       int offset = 0;
       offset += this->header.serialize(outbuffer + offset);
-      offset += serializeAvrFloat64(outbuffer + offset, this->real_time_factor);
+      union {
+        double real;
+        uint64_t base;
+      } u_real_time_factor;
+      u_real_time_factor.real = this->real_time_factor;
+      *(outbuffer + offset + 0) = (u_real_time_factor.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_real_time_factor.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_real_time_factor.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_real_time_factor.base >> (8 * 3)) & 0xFF;
+      *(outbuffer + offset + 4) = (u_real_time_factor.base >> (8 * 4)) & 0xFF;
+      *(outbuffer + offset + 5) = (u_real_time_factor.base >> (8 * 5)) & 0xFF;
+      *(outbuffer + offset + 6) = (u_real_time_factor.base >> (8 * 6)) & 0xFF;
+      *(outbuffer + offset + 7) = (u_real_time_factor.base >> (8 * 7)) & 0xFF;
+      offset += sizeof(this->real_time_factor);
       *(outbuffer + offset + 0) = (this->sensors_length >> (8 * 0)) & 0xFF;
       *(outbuffer + offset + 1) = (this->sensors_length >> (8 * 1)) & 0xFF;
       *(outbuffer + offset + 2) = (this->sensors_length >> (8 * 2)) & 0xFF;
@@ -50,7 +63,21 @@ namespace gazebo_msgs
     {
       int offset = 0;
       offset += this->header.deserialize(inbuffer + offset);
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->real_time_factor));
+      union {
+        double real;
+        uint64_t base;
+      } u_real_time_factor;
+      u_real_time_factor.base = 0;
+      u_real_time_factor.base |= ((uint64_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_real_time_factor.base |= ((uint64_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_real_time_factor.base |= ((uint64_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_real_time_factor.base |= ((uint64_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      u_real_time_factor.base |= ((uint64_t) (*(inbuffer + offset + 4))) << (8 * 4);
+      u_real_time_factor.base |= ((uint64_t) (*(inbuffer + offset + 5))) << (8 * 5);
+      u_real_time_factor.base |= ((uint64_t) (*(inbuffer + offset + 6))) << (8 * 6);
+      u_real_time_factor.base |= ((uint64_t) (*(inbuffer + offset + 7))) << (8 * 7);
+      this->real_time_factor = u_real_time_factor.real;
+      offset += sizeof(this->real_time_factor);
       uint32_t sensors_lengthT = ((uint32_t) (*(inbuffer + offset))); 
       sensors_lengthT |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1); 
       sensors_lengthT |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2); 
