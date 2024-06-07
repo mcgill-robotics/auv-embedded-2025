@@ -8,6 +8,7 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
+#include <cmath>
 
 // Define pin configurations
 #define TFT_DC 9
@@ -32,6 +33,9 @@
 #define ILI9341_ROTATION_90 1
 #define ILI9341_ROTATION_180 2
 #define ILI9341_ROTATION_270 3
+
+// Define the number of samples to use in the moving average
+#define MOVING_AVERAGE_SAMPLES 10
 
 // Initialize display object
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
@@ -60,6 +64,52 @@ float thrusters_old[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 float devices_old[] = { -1, -1, -1, -1, -1, -1, -1 };
 String status_old = "";
 String quaternions_old[] = { "", "", "", "" };
+
+// Status of batteries
+boolean BATT1_EMPTY = false;
+boolean BATT2_EMPTY = false;
+
+// Arrays to store previous voltage readings for moving average
+float voltage_buffer1[MOVING_AVERAGE_SAMPLES];
+int voltage_buffer_index1 = 0;
+float voltage_buffer2[MOVING_AVERAGE_SAMPLES];
+int voltage_buffer_index2 = 0;
+
+// Function to perform moving average filtering for battery 1
+float movingAverage1(float newValue) {
+  static float sum = 0;
+
+  // Subtract oldest value from sum
+  sum -= voltage_buffer2[voltage_buffer_index2];
+
+  // Add new value to sum
+  voltage_buffer2[voltage_buffer_index2] = newValue;
+  sum += newValue;
+
+  // Move to the next index in the buffer
+  voltage_buffer_index2 = (voltage_buffer_index2 + 1) % MOVING_AVERAGE_SAMPLES;
+
+  // Calculate and return the average
+  return sum / MOVING_AVERAGE_SAMPLES;
+}
+
+// Function to perform moving average filtering for battery 2
+float movingAverage2(float newValue) {
+  static float sum = 0;
+
+  // Subtract oldest value from sum
+  sum -= voltage_buffer1[voltage_buffer_index1];
+
+  // Add new value to sum
+  voltage_buffer1[voltage_buffer_index1] = newValue;
+  sum += newValue;
+
+  // Move to the next index in the buffer
+  voltage_buffer_index1 = (voltage_buffer_index1 + 1) % MOVING_AVERAGE_SAMPLES;
+
+  // Calculate and return the average
+  return sum / MOVING_AVERAGE_SAMPLES;
+}
 
 // Function to initialize main screen layout
 void initMainScreen() {
@@ -115,16 +165,23 @@ void initMainScreen() {
 
 // Function to update battery 1 display
 void batt1(float V1) {
+  V1 = round(V1 * 10) / 10;
+  V1 = movingAverage1(V1);
+  V1 = round(V1 * 10) / 10;
+
   voltages_new[0] = V1;
   if (voltages_old[0] != voltages_new[0]) {
-    voltages_old[0] = V1;
-    if (V1 <= 12.6) {
-      tft.setTextColor(BLACK);
-      batt_colours[0] = WHITE;
-      tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
-      tft.setCursor(8, 25);
-      tft.setTextSize(5);
-      tft.println("EMPTY");
+    voltages_old[0] = voltages_new[0];
+    if (V1 <= 12.8) {
+      if (!BATT1_EMPTY) {
+        tft.setTextColor(BLACK);
+        batt_colours[0] = WHITE;
+        tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
+        tft.setCursor(8, 25);
+        tft.setTextSize(5);
+        tft.println("EMPTY");
+        BATT1_EMPTY = true;
+      }
       return;
     } else if (V1 <= 14.8) {
       batt_colours[0] = RED;
@@ -137,25 +194,35 @@ void batt1(float V1) {
     char buffer[6];
     dtostrf(V1, 4, 1, buffer);
 
+    tft.setTextColor(WHITE);
     tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
     tft.setCursor(10, 20);
     tft.setTextSize(6);
     tft.println(buffer);
+    
+    BATT1_EMPTY = false;
   }
 }
 
 // Function to update battery 2 display
 void batt2(float V2) {
+  V2 = round(V2 * 10) / 10;
+  V2 = movingAverage2(V2);
+  V2 = round(V2 * 10) / 10;
+
   voltages_new[1] = V2;
   if (voltages_old[1] != voltages_new[1]) {
-    voltages_old[1] = V2;
-    if (V2 <= 12.6) {
-      tft.setTextColor(BLACK);
-      batt_colours[1] = WHITE;
-      tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
-      tft.setCursor(WIDTH / 2 + 8, 25);
-      tft.setTextSize(5);
-      tft.println("EMPTY");
+    voltages_old[1] = voltages_new[1];
+    if (V2 <= 12.8) {
+      if (!BATT2_EMPTY) {
+        tft.setTextColor(BLACK);
+        batt_colours[1] = WHITE;
+        tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
+        tft.setCursor(WIDTH / 2 + 8, 25);
+        tft.setTextSize(5);
+        tft.println("EMPTY");
+        BATT2_EMPTY = true;
+      }
       return;
     } else if (V2 <= 14.8) {
       batt_colours[1] = RED;
@@ -168,10 +235,13 @@ void batt2(float V2) {
     char buffer[6];
     dtostrf(V2, 4, 1, buffer);
 
+    tft.setTextColor(WHITE);
     tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
     tft.setCursor(WIDTH / 2 + 10, 20);
     tft.setTextSize(6);
     tft.println(buffer);
+
+    BATT2_EMPTY = false;
   }
 }
 
@@ -523,6 +593,12 @@ void setup() {
 
   // Advertise ROS publisher
   nh.advertise(DEPTH);
+
+  // Initializes voltage buffer arrays
+  for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
+    voltage_buffer1[i] = 0;
+    voltage_buffer2[i] = 0;
+  }
 }
 
 void loop() {
@@ -544,3 +620,4 @@ void loop() {
   // Delay for stability
   delay(10);
 }
+
