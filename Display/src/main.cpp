@@ -5,6 +5,7 @@
 #include "MS5837.h"
 #include <ros.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Float64.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
 
@@ -438,12 +439,12 @@ void quaternionZMessageCallback(const std_msgs::Float32& msg) {
 }
 
 // Define publisher message variable
-std_msgs::Float32 depth_msg;
+std_msgs::Float64 depth_msg;
 
 // Define publishers and subscribers
 // Publishes depth
 // Subscribes to battery voltages, thruster statuses, device statuses, status message, and quaternions
-ros::Publisher DEPTH("depth", &depth_msg);
+ros::Publisher DEPTH("/sensors/depth/z", &depth_msg);
 ros::Subscriber<std_msgs::Float32> BATT1("/batteries/voltage/1", &batt1MessageCallback);
 ros::Subscriber<std_msgs::Float32> BATT2("/batteries/voltage/2", &batt2MessageCallback);
 ros::Subscriber<std_msgs::Int32> THRUSTER1("/thrusters/status/1", &thruster1MessageCallback);
@@ -454,14 +455,14 @@ ros::Subscriber<std_msgs::Int32> THRUSTER5("/thrusters/status/5", &thruster5Mess
 ros::Subscriber<std_msgs::Int32> THRUSTER6("/thrusters/status/6", &thruster6MessageCallback);
 ros::Subscriber<std_msgs::Int32> THRUSTER7("/thrusters/status/7", &thruster7MessageCallback);
 ros::Subscriber<std_msgs::Int32> THRUSTER8("/thrusters/status/8", &thruster8MessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEIMU("/devices/status/imu", &devicesIMUMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEDVL("/devices/status/dvl", &devicesDVLMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEPS("/devices/status/ps", &devicesPSMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEHYD("/devices/status/hyd", &devicesHYDMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEACT("/devices/status/act", &devicesACTMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEFC("/devices/status/fc", &devicesFCMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEDC("/devices/status/dc", &devicesDCMessageCallback);
-ros::Subscriber<std_msgs::String> STATUSMESSAGE("/jetson/status", &statusMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEIMU("/sensors/imu/status", &devicesIMUMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEDVL("/sensors/dvl/status", &devicesDVLMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEPS("/sensors/depth/status", &devicesPSMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEHYD("/sensors/hydrophones/status", &devicesHYDMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEACT("/sensors/actuator/status", &devicesACTMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEFC("/sensors/front_camera/status", &devicesFCMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEDC("/sensors/down_camera/status", &devicesDCMessageCallback);
+ros::Subscriber<std_msgs::String> STATUSMESSAGE("/mission_display", &statusMessageCallback);
 ros::Subscriber<std_msgs::Float32> QUATERNIONW("/quaternions/W", &quaternionWMessageCallback);
 ros::Subscriber<std_msgs::Float32> QUATERNIONX("/quaternions/X", &quaternionXMessageCallback);
 ros::Subscriber<std_msgs::Float32> QUATERNIONY("/quaternions/Y", &quaternionYMessageCallback);
