@@ -22,13 +22,13 @@ namespace auv_msgs
       _velocity_type velocity;
       typedef geometry_msgs::Vector3 _angular_velocity_type;
       _angular_velocity_type angular_velocity;
-      typedef bool _isDVLActive_type;
+      typedef int32_t _isDVLActive_type;
       _isDVLActive_type isDVLActive;
-      typedef bool _isDepthSensorActive_type;
+      typedef int32_t _isDepthSensorActive_type;
       _isDepthSensorActive_type isDepthSensorActive;
-      typedef bool _isIMUActive_type;
+      typedef int32_t _isIMUActive_type;
       _isIMUActive_type isIMUActive;
-      typedef bool _isHydrophonesActive_type;
+      typedef int32_t _isHydrophonesActive_type;
       _isHydrophonesActive_type isHydrophonesActive;
 
     UnityState():
@@ -51,32 +51,44 @@ namespace auv_msgs
       offset += this->velocity.serialize(outbuffer + offset);
       offset += this->angular_velocity.serialize(outbuffer + offset);
       union {
-        bool real;
-        uint8_t base;
+        int32_t real;
+        uint32_t base;
       } u_isDVLActive;
       u_isDVLActive.real = this->isDVLActive;
       *(outbuffer + offset + 0) = (u_isDVLActive.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_isDVLActive.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_isDVLActive.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_isDVLActive.base >> (8 * 3)) & 0xFF;
       offset += sizeof(this->isDVLActive);
       union {
-        bool real;
-        uint8_t base;
+        int32_t real;
+        uint32_t base;
       } u_isDepthSensorActive;
       u_isDepthSensorActive.real = this->isDepthSensorActive;
       *(outbuffer + offset + 0) = (u_isDepthSensorActive.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_isDepthSensorActive.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_isDepthSensorActive.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_isDepthSensorActive.base >> (8 * 3)) & 0xFF;
       offset += sizeof(this->isDepthSensorActive);
       union {
-        bool real;
-        uint8_t base;
+        int32_t real;
+        uint32_t base;
       } u_isIMUActive;
       u_isIMUActive.real = this->isIMUActive;
       *(outbuffer + offset + 0) = (u_isIMUActive.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_isIMUActive.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_isIMUActive.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_isIMUActive.base >> (8 * 3)) & 0xFF;
       offset += sizeof(this->isIMUActive);
       union {
-        bool real;
-        uint8_t base;
+        int32_t real;
+        uint32_t base;
       } u_isHydrophonesActive;
       u_isHydrophonesActive.real = this->isHydrophonesActive;
       *(outbuffer + offset + 0) = (u_isHydrophonesActive.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_isHydrophonesActive.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_isHydrophonesActive.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_isHydrophonesActive.base >> (8 * 3)) & 0xFF;
       offset += sizeof(this->isHydrophonesActive);
       return offset;
     }
@@ -89,42 +101,54 @@ namespace auv_msgs
       offset += this->velocity.deserialize(inbuffer + offset);
       offset += this->angular_velocity.deserialize(inbuffer + offset);
       union {
-        bool real;
-        uint8_t base;
+        int32_t real;
+        uint32_t base;
       } u_isDVLActive;
       u_isDVLActive.base = 0;
-      u_isDVLActive.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_isDVLActive.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_isDVLActive.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_isDVLActive.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_isDVLActive.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
       this->isDVLActive = u_isDVLActive.real;
       offset += sizeof(this->isDVLActive);
       union {
-        bool real;
-        uint8_t base;
+        int32_t real;
+        uint32_t base;
       } u_isDepthSensorActive;
       u_isDepthSensorActive.base = 0;
-      u_isDepthSensorActive.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_isDepthSensorActive.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_isDepthSensorActive.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_isDepthSensorActive.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_isDepthSensorActive.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
       this->isDepthSensorActive = u_isDepthSensorActive.real;
       offset += sizeof(this->isDepthSensorActive);
       union {
-        bool real;
-        uint8_t base;
+        int32_t real;
+        uint32_t base;
       } u_isIMUActive;
       u_isIMUActive.base = 0;
-      u_isIMUActive.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_isIMUActive.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_isIMUActive.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_isIMUActive.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_isIMUActive.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
       this->isIMUActive = u_isIMUActive.real;
       offset += sizeof(this->isIMUActive);
       union {
-        bool real;
-        uint8_t base;
+        int32_t real;
+        uint32_t base;
       } u_isHydrophonesActive;
       u_isHydrophonesActive.base = 0;
-      u_isHydrophonesActive.base |= ((uint8_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_isHydrophonesActive.base |= ((uint32_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_isHydrophonesActive.base |= ((uint32_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_isHydrophonesActive.base |= ((uint32_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_isHydrophonesActive.base |= ((uint32_t) (*(inbuffer + offset + 3))) << (8 * 3);
       this->isHydrophonesActive = u_isHydrophonesActive.real;
       offset += sizeof(this->isHydrophonesActive);
      return offset;
     }
 
     virtual const char * getType() override { return "auv_msgs/UnityState"; };
-    virtual const char * getMD5() override { return "fe38eb84b94285c183b98ba2ef85a6c5"; };
+    virtual const char * getMD5() override { return "50dceff8b2762d7705a4a76f09fc6225"; };
 
   };
 

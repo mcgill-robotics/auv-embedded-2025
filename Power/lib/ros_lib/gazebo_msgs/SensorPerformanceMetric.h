@@ -14,11 +14,11 @@ namespace gazebo_msgs
     public:
       typedef const char* _name_type;
       _name_type name;
-      typedef float _sim_update_rate_type;
+      typedef double _sim_update_rate_type;
       _sim_update_rate_type sim_update_rate;
-      typedef float _real_update_rate_type;
+      typedef double _real_update_rate_type;
       _real_update_rate_type real_update_rate;
-      typedef float _fps_type;
+      typedef double _fps_type;
       _fps_type fps;
 
     SensorPerformanceMetric():
@@ -37,9 +37,48 @@ namespace gazebo_msgs
       offset += 4;
       memcpy(outbuffer + offset, this->name, length_name);
       offset += length_name;
-      offset += serializeAvrFloat64(outbuffer + offset, this->sim_update_rate);
-      offset += serializeAvrFloat64(outbuffer + offset, this->real_update_rate);
-      offset += serializeAvrFloat64(outbuffer + offset, this->fps);
+      union {
+        double real;
+        uint64_t base;
+      } u_sim_update_rate;
+      u_sim_update_rate.real = this->sim_update_rate;
+      *(outbuffer + offset + 0) = (u_sim_update_rate.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_sim_update_rate.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_sim_update_rate.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_sim_update_rate.base >> (8 * 3)) & 0xFF;
+      *(outbuffer + offset + 4) = (u_sim_update_rate.base >> (8 * 4)) & 0xFF;
+      *(outbuffer + offset + 5) = (u_sim_update_rate.base >> (8 * 5)) & 0xFF;
+      *(outbuffer + offset + 6) = (u_sim_update_rate.base >> (8 * 6)) & 0xFF;
+      *(outbuffer + offset + 7) = (u_sim_update_rate.base >> (8 * 7)) & 0xFF;
+      offset += sizeof(this->sim_update_rate);
+      union {
+        double real;
+        uint64_t base;
+      } u_real_update_rate;
+      u_real_update_rate.real = this->real_update_rate;
+      *(outbuffer + offset + 0) = (u_real_update_rate.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_real_update_rate.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_real_update_rate.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_real_update_rate.base >> (8 * 3)) & 0xFF;
+      *(outbuffer + offset + 4) = (u_real_update_rate.base >> (8 * 4)) & 0xFF;
+      *(outbuffer + offset + 5) = (u_real_update_rate.base >> (8 * 5)) & 0xFF;
+      *(outbuffer + offset + 6) = (u_real_update_rate.base >> (8 * 6)) & 0xFF;
+      *(outbuffer + offset + 7) = (u_real_update_rate.base >> (8 * 7)) & 0xFF;
+      offset += sizeof(this->real_update_rate);
+      union {
+        double real;
+        uint64_t base;
+      } u_fps;
+      u_fps.real = this->fps;
+      *(outbuffer + offset + 0) = (u_fps.base >> (8 * 0)) & 0xFF;
+      *(outbuffer + offset + 1) = (u_fps.base >> (8 * 1)) & 0xFF;
+      *(outbuffer + offset + 2) = (u_fps.base >> (8 * 2)) & 0xFF;
+      *(outbuffer + offset + 3) = (u_fps.base >> (8 * 3)) & 0xFF;
+      *(outbuffer + offset + 4) = (u_fps.base >> (8 * 4)) & 0xFF;
+      *(outbuffer + offset + 5) = (u_fps.base >> (8 * 5)) & 0xFF;
+      *(outbuffer + offset + 6) = (u_fps.base >> (8 * 6)) & 0xFF;
+      *(outbuffer + offset + 7) = (u_fps.base >> (8 * 7)) & 0xFF;
+      offset += sizeof(this->fps);
       return offset;
     }
 
@@ -55,9 +94,51 @@ namespace gazebo_msgs
       inbuffer[offset+length_name-1]=0;
       this->name = (char *)(inbuffer + offset-1);
       offset += length_name;
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->sim_update_rate));
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->real_update_rate));
-      offset += deserializeAvrFloat64(inbuffer + offset, &(this->fps));
+      union {
+        double real;
+        uint64_t base;
+      } u_sim_update_rate;
+      u_sim_update_rate.base = 0;
+      u_sim_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_sim_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_sim_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_sim_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      u_sim_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 4))) << (8 * 4);
+      u_sim_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 5))) << (8 * 5);
+      u_sim_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 6))) << (8 * 6);
+      u_sim_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 7))) << (8 * 7);
+      this->sim_update_rate = u_sim_update_rate.real;
+      offset += sizeof(this->sim_update_rate);
+      union {
+        double real;
+        uint64_t base;
+      } u_real_update_rate;
+      u_real_update_rate.base = 0;
+      u_real_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_real_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_real_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_real_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      u_real_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 4))) << (8 * 4);
+      u_real_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 5))) << (8 * 5);
+      u_real_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 6))) << (8 * 6);
+      u_real_update_rate.base |= ((uint64_t) (*(inbuffer + offset + 7))) << (8 * 7);
+      this->real_update_rate = u_real_update_rate.real;
+      offset += sizeof(this->real_update_rate);
+      union {
+        double real;
+        uint64_t base;
+      } u_fps;
+      u_fps.base = 0;
+      u_fps.base |= ((uint64_t) (*(inbuffer + offset + 0))) << (8 * 0);
+      u_fps.base |= ((uint64_t) (*(inbuffer + offset + 1))) << (8 * 1);
+      u_fps.base |= ((uint64_t) (*(inbuffer + offset + 2))) << (8 * 2);
+      u_fps.base |= ((uint64_t) (*(inbuffer + offset + 3))) << (8 * 3);
+      u_fps.base |= ((uint64_t) (*(inbuffer + offset + 4))) << (8 * 4);
+      u_fps.base |= ((uint64_t) (*(inbuffer + offset + 5))) << (8 * 5);
+      u_fps.base |= ((uint64_t) (*(inbuffer + offset + 6))) << (8 * 6);
+      u_fps.base |= ((uint64_t) (*(inbuffer + offset + 7))) << (8 * 7);
+      this->fps = u_fps.real;
+      offset += sizeof(this->fps);
      return offset;
     }
 
