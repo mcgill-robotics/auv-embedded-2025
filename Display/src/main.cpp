@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include "MS5837.h"
 #include <ros.h>
+#include <auv_msgs/ThrusterMicroseconds.h>
 #include <std_msgs/Float32.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Int32.h>
@@ -47,13 +48,18 @@ MS5837 sensor;
 ros::NodeHandle nh;
 
 // Define global variables for ros handling
+// Maintains newest version of thruster pwm values and status
+uint16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
+int Sthrusters[8];
+
+// Define global variables for ros handling
 // Maintains newest version of all variables
 float batt_voltage_1_new = 0;
 float batt_voltage_2_new = 0;
 int thrusters_new[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 int devices_new[] = { 0, 0, 0, 0, 0, 0, 0 };
 String status_new = "I am Douglas!";
-float quaternions_new[] = { 0, 0, 0, 0 };
+float positions_new[] = { 0, 0, 0, 0 };
 
 // Define global variables for display functions
 // Maintains version of variables on screen
@@ -63,7 +69,7 @@ uint16_t batt_colours[] = { WHITE, WHITE };
 float thrusters_old[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 float devices_old[] = { -1, -1, -1, -1, -1, -1, -1 };
 String status_old = "";
-String quaternions_old[] = { "", "", "", "" };
+String positions_old[] = { "", "", "", "" };
 
 // Status of batteries
 boolean BATT1_EMPTY = false;
@@ -142,14 +148,14 @@ void initMainScreen() {
   tft.drawLine(0, HEIGHT / 3 + 40 + 45, WIDTH, HEIGHT / 3 + 40 + 45, BLACK);
   tft.drawLine(0, HEIGHT - 41, WIDTH, HEIGHT - 41, BLACK);
 
-  // Quaternions section
+  // Positions section
   for (int i = 0; i < 4; i++) {
     int x = i * WIDTH / 4;
     tft.drawRect(x, HEIGHT - 40, WIDTH / 4, 40, BLACK);
     tft.setCursor(x + 2, HEIGHT - 38);
     tft.setTextSize(1);
     if (i == 0) {
-      tft.print("W");
+      tft.print("YAW");
     } else if (i == 1) {
       tft.print("X");
     } else if (i == 2) {
@@ -339,16 +345,16 @@ void status(String status) {
   status_old = temp_status;
 }
 
-// Function to update quaternions display
-void quaternions(float W, float X, float Y, float Z) {
-  char bufferW[5], bufferX[5], bufferY[5], bufferZ[5];
+// Function to update positions display
+void positions(float YAW, float X, float Y, float Z) {
+  char bufferYAW[5], bufferX[5], bufferY[5], bufferZ[5];
 
-  if (W == 1.0) {
-    strcpy(bufferW, "1.0");
+  if (YAW == 1.0) {
+    strcpy(bufferYAW, "1.0");
   } else {
-    dtostrf(W, 3, 2, bufferW);
-    if (bufferW[0] == '0') {
-      memmove(bufferW, bufferW + 1, strlen(bufferW));
+    dtostrf(YAW, 3, 2, bufferYAW);
+    if (bufferYAW[0] == '0') {
+      memmove(bufferYAW, bufferYAW + 1, strlen(bufferYAW));
     }
   }
 
@@ -379,24 +385,41 @@ void quaternions(float W, float X, float Y, float Z) {
     }
   }
 
-  String temp_quaternions[] = { bufferW, bufferX, bufferY, bufferZ };
+  String temp_positions[] = { bufferYAW, bufferX, bufferY, bufferZ };
 
   for (int i = 0; i < 4; i++) {
     int x = i * WIDTH / 4;
 
-    if (temp_quaternions[i] != quaternions_old[i]) {
+    if (temp_positions[i] != positions_old[i]) {
       tft.fillRect(x + 1 + 8, HEIGHT - 40 + 1 + 6, WIDTH / 4 - 2 - 8, 38 - 6, WHITE);
 
       tft.setCursor(x + 5, HEIGHT - 33);
       tft.setTextColor(BLACK);
       tft.setTextSize(4);
-      tft.println(temp_quaternions[i]);
+      tft.println(temp_positions[i]);
     }
   }
 
   for (int i = 0; i < 4; i++) {
-    quaternions_old[i] = temp_quaternions[i];
+    positions_old[i] = temp_positions[i];
   }
+}
+
+// function to update thruster statuses
+void thrusterStatus(int Sthrusters[]) {
+	for (int i = 0; i < 8; i++) {
+		if (microseconds[i] == 1500) {
+			Sthrusters[i] = 0;
+		} else {
+			Sthrusters[i] = 1;
+		}
+	}
+}
+
+// Callback function that updates microseconds array with values from ros
+void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
+	memcpy(microseconds, tc.microseconds, 8*sizeof(uint16_t));
+  thrusterStatus(Sthrusters);
 }
 
 // Callback function for battery 1 message
@@ -407,45 +430,6 @@ void batt1MessageCallback(const std_msgs::Float32& msg) {
 // Callback function for battery 2 message
 void batt2MessageCallback(const std_msgs::Float32& msg) {
   batt_voltage_2_new = msg.data;
-}
-
-// Callback function for thruster 1 message
-void thruster1MessageCallback(const std_msgs::Int32& msg) {
-  thrusters_new[0] = msg.data;
-}
-
-// Callback function for thruster 2 message
-void thruster2MessageCallback(const std_msgs::Int32& msg) {
-  thrusters_new[1] = msg.data;
-}
-
-// Callback function for thruster 3 message
-void thruster3MessageCallback(const std_msgs::Int32& msg) {
-  thrusters_new[2] = msg.data;
-}
-// Callback function for thruster 4 message
-void thruster4MessageCallback(const std_msgs::Int32& msg) {
-  thrusters_new[3] = msg.data;
-}
-
-// Callback function for thruster 5 message
-void thruster5MessageCallback(const std_msgs::Int32& msg) {
-  thrusters_new[4] = msg.data;
-}
-
-// Callback function for thruster 6 message
-void thruster6MessageCallback(const std_msgs::Int32& msg) {
-  thrusters_new[5] = msg.data;
-}
-
-// Callback function for thruster 7 message
-void thruster7MessageCallback(const std_msgs::Int32& msg) {
-  thrusters_new[6] = msg.data;
-}
-
-// Callback function for thruster 8 message
-void thruster8MessageCallback(const std_msgs::Int32& msg) {
-  thrusters_new[7] = msg.data;
 }
 
 // Callback function for IMU message
@@ -488,24 +472,24 @@ void statusMessageCallback(const std_msgs::String& msg) {
   status_new = msg.data;
 }
 
-// Callback function for quaternion W message
-void quaternionWMessageCallback(const std_msgs::Float32& msg) {
-  quaternions_new[0] = msg.data;
+// Callback function for position W message
+void positionYAWMessageCallback(const std_msgs::Float32& msg) {
+  positions_new[0] = msg.data;
 }
 
-// Callback function for quaternion X message
-void quaternionXMessageCallback(const std_msgs::Float32& msg) {
-  quaternions_new[1] = msg.data;
+// Callback function for position X message
+void positionXMessageCallback(const std_msgs::Float32& msg) {
+  positions_new[1] = msg.data;
 }
 
-// Callback function for quaternion Y message
-void quaternionYMessageCallback(const std_msgs::Float32& msg) {
-  quaternions_new[2] = msg.data;
+// Callback function for position Y message
+void positionYMessageCallback(const std_msgs::Float32& msg) {
+  positions_new[2] = msg.data;
 }
 
-// Callback function for quaternion Z message
-void quaternionZMessageCallback(const std_msgs::Float32& msg) {
-  quaternions_new[3] = msg.data;
+// Callback function for position Z message
+void positionZMessageCallback(const std_msgs::Float32& msg) {
+  positions_new[3] = msg.data;
 }
 
 // Define publisher message variable
@@ -513,18 +497,11 @@ std_msgs::Float64 depth_msg;
 
 // Define publishers and subscribers
 // Publishes depth
-// Subscribes to battery voltages, thruster statuses, device statuses, status message, and quaternions
+// Subscribes to battery voltages, thruster microseconds, device statuses, status message, and positions
 ros::Publisher DEPTH("/sensors/depth/z", &depth_msg);
-ros::Subscriber<std_msgs::Float32> BATT1("/batteries/voltage/1", &batt1MessageCallback);
-ros::Subscriber<std_msgs::Float32> BATT2("/batteries/voltage/2", &batt2MessageCallback);
-ros::Subscriber<std_msgs::Int32> THRUSTER1("/thrusters/status/1", &thruster1MessageCallback);
-ros::Subscriber<std_msgs::Int32> THRUSTER2("/thrusters/status/2", &thruster2MessageCallback);
-ros::Subscriber<std_msgs::Int32> THRUSTER3("/thrusters/status/3", &thruster3MessageCallback);
-ros::Subscriber<std_msgs::Int32> THRUSTER4("/thrusters/status/4", &thruster4MessageCallback);
-ros::Subscriber<std_msgs::Int32> THRUSTER5("/thrusters/status/5", &thruster5MessageCallback);
-ros::Subscriber<std_msgs::Int32> THRUSTER6("/thrusters/status/6", &thruster6MessageCallback);
-ros::Subscriber<std_msgs::Int32> THRUSTER7("/thrusters/status/7", &thruster7MessageCallback);
-ros::Subscriber<std_msgs::Int32> THRUSTER8("/thrusters/status/8", &thruster8MessageCallback);
+ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
+ros::Subscriber<std_msgs::Float32> BATT1("/display/batteries/voltage/1", &batt1MessageCallback);
+ros::Subscriber<std_msgs::Float32> BATT2("/display/batteries/voltage/2", &batt2MessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEIMU("/sensors/imu/status", &devicesIMUMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEDVL("/sensors/dvl/status", &devicesDVLMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEPS("/sensors/depth/status", &devicesPSMessageCallback);
@@ -533,10 +510,10 @@ ros::Subscriber<std_msgs::Int32> DEVICEACT("/sensors/actuator/status", &devicesA
 ros::Subscriber<std_msgs::Int32> DEVICEFC("/sensors/front_camera/status", &devicesFCMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEDC("/sensors/down_camera/status", &devicesDCMessageCallback);
 ros::Subscriber<std_msgs::String> STATUSMESSAGE("/mission_display", &statusMessageCallback);
-ros::Subscriber<std_msgs::Float32> QUATERNIONW("/quaternions/W", &quaternionWMessageCallback);
-ros::Subscriber<std_msgs::Float32> QUATERNIONX("/quaternions/X", &quaternionXMessageCallback);
-ros::Subscriber<std_msgs::Float32> QUATERNIONY("/quaternions/Y", &quaternionYMessageCallback);
-ros::Subscriber<std_msgs::Float32> QUATERNIONZ("/quaternions/Z", &quaternionZMessageCallback);
+ros::Subscriber<std_msgs::Float32> POSITIONYAW("/state/theta/z", &positionYAWMessageCallback);
+ros::Subscriber<std_msgs::Float32> POSITIONX("/state/x", &positionXMessageCallback);
+ros::Subscriber<std_msgs::Float32> POSITIONY("/state/y", &positionYMessageCallback);
+ros::Subscriber<std_msgs::Float32> POSITIONZ("/state/z", &positionZMessageCallback);
 
 // Function to calculate and publish depth
 void publish_depth() {
@@ -547,9 +524,9 @@ void publish_depth() {
 void setup() {
   // Initialize I2C communication with sensor
   Wire.begin();
-  while (!sensor.init()) {
-    delay(5000);
-  }
+  sensor.init();
+  delay(1000);
+
   sensor.setModel(MS5837::MS5837_30BA);
   sensor.setFluidDensity(997);
 
@@ -568,16 +545,9 @@ void setup() {
   nh.initNode();
 
   // Subscribe to ROS topics
+  nh.subscribe(sub);
   nh.subscribe(BATT1);
   nh.subscribe(BATT2);
-  nh.subscribe(THRUSTER1);
-  nh.subscribe(THRUSTER2);
-  nh.subscribe(THRUSTER3);
-  nh.subscribe(THRUSTER4);
-  nh.subscribe(THRUSTER5);
-  nh.subscribe(THRUSTER6);
-  nh.subscribe(THRUSTER7);
-  nh.subscribe(THRUSTER8);
   nh.subscribe(DEVICEIMU);
   nh.subscribe(DEVICEDVL);
   nh.subscribe(DEVICEPS);
@@ -586,10 +556,10 @@ void setup() {
   nh.subscribe(DEVICEFC);
   nh.subscribe(DEVICEDC);
   nh.subscribe(STATUSMESSAGE);
-  nh.subscribe(QUATERNIONW);
-  nh.subscribe(QUATERNIONX);
-  nh.subscribe(QUATERNIONY);
-  nh.subscribe(QUATERNIONZ);
+  //nh.subscribe(POSITIONYAW);
+  //nh.subscribe(POSITIONX);
+  //nh.subscribe(POSITIONY);
+  //nh.subscribe(POSITIONZ);
 
   // Advertise ROS publisher
   nh.advertise(DEPTH);
@@ -612,10 +582,10 @@ void loop() {
   // Update display with new data
   batt1(batt_voltage_1_new);
   batt2(batt_voltage_2_new);
-  thrusters(thrusters_new[0], thrusters_new[1], thrusters_new[2], thrusters_new[3], thrusters_new[4], thrusters_new[5], thrusters_new[6], thrusters_new[7]);
+  thrusters(Sthrusters[0], Sthrusters[1], Sthrusters[2], Sthrusters[3], Sthrusters[4], Sthrusters[5], Sthrusters[6], Sthrusters[7]);
   devices(devices_new[0], devices_new[1], devices_new[2], devices_new[3], devices_new[4], devices_new[5], devices_new[6]);
   status(status_new);
-  quaternions(quaternions_new[0], quaternions_new[1], quaternions_new[2], quaternions_new[3]);
+  //positions(positions_new[0], positions_new[1], positions_new[2], positions_new[3]);
 
   // Delay for stability
   delay(10);
