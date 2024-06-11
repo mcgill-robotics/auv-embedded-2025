@@ -9,6 +9,7 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
+#include <cmath>
 
 // Define pin configurations
 #define TFT_DC 9
@@ -57,7 +58,7 @@ float batt_voltage_1_new = 0;
 float batt_voltage_2_new = 0;
 int thrusters_new[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 int devices_new[] = { 0, 0, 0, 0, 0, 0, 0 };
-String status_new = "I am Douglas!";
+String status_new = "JP is my father!";
 int tether_new = 0;
 
 // Define global variables for display functions
@@ -160,9 +161,9 @@ void initMainScreen() {
 
 // Function to update battery 1 display
 void batt1(float V1) {
-  V1 = round(V1 * 10) / 10;
+  V1 = round(V1 * 10.0) / 10.0;
   V1 = movingAverage1(V1);
-  V1 = round(V1 * 10) / 10;
+  V1 = round(V1 * 10.0) / 10.0;
 
   voltages_new[0] = V1;
   if (voltages_old[0] != voltages_new[0]) {
@@ -201,9 +202,9 @@ void batt1(float V1) {
 
 // Function to update battery 2 display
 void batt2(float V2) {
-  V2 = round(V2 * 10) / 10;
+  V2 = round(V2 * 10.0) / 10.0;
   V2 = movingAverage2(V2);
-  V2 = round(V2 * 10) / 10;
+  V2 = round(V2 * 10.0) / 10.0;
 
   voltages_new[1] = V2;
   if (voltages_old[1] != voltages_new[1]) {
