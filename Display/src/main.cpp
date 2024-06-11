@@ -9,7 +9,6 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/String.h>
-#include <cmath>
 
 // Define pin configurations
 #define TFT_DC 9
@@ -59,7 +58,7 @@ float batt_voltage_2_new = 0;
 int thrusters_new[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 int devices_new[] = { 0, 0, 0, 0, 0, 0, 0 };
 String status_new = "I am Douglas!";
-float positions_new[] = { 0, 0, 0, 0 };
+int tether_new = 0;
 
 // Define global variables for display functions
 // Maintains version of variables on screen
@@ -69,7 +68,8 @@ uint16_t batt_colours[] = { WHITE, WHITE };
 float thrusters_old[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 float devices_old[] = { -1, -1, -1, -1, -1, -1, -1 };
 String status_old = "";
-String positions_old[] = { "", "", "", "" };
+int tether_old = -1;
+int dual_batt_old = -1;
 
 // Status of batteries
 boolean BATT1_EMPTY = false;
@@ -148,21 +148,10 @@ void initMainScreen() {
   tft.drawLine(0, HEIGHT / 3 + 40 + 45, WIDTH, HEIGHT / 3 + 40 + 45, BLACK);
   tft.drawLine(0, HEIGHT - 41, WIDTH, HEIGHT - 41, BLACK);
 
-  // Positions section
-  for (int i = 0; i < 4; i++) {
-    int x = i * WIDTH / 4;
-    tft.drawRect(x, HEIGHT - 40, WIDTH / 4, 40, BLACK);
-    tft.setCursor(x + 2, HEIGHT - 38);
-    tft.setTextSize(1);
-    if (i == 0) {
-      tft.print("YAW");
-    } else if (i == 1) {
-      tft.print("X");
-    } else if (i == 2) {
-      tft.print("Y");
-    } else if (i == 3) {
-      tft.print("Z");
-    }
+  // Tether and dual battery section
+  for (int i = 0; i < 2; i++) {
+    int x = i * WIDTH / 2;
+    tft.drawRect(x, HEIGHT - 40, WIDTH / 2, 40, BLACK);
   }
 
   // Draws full rectangle on edges
@@ -345,63 +334,41 @@ void status(String status) {
   status_old = temp_status;
 }
 
-// Function to update positions display
-void positions(float YAW, float X, float Y, float Z) {
-  char bufferYAW[5], bufferX[5], bufferY[5], bufferZ[5];
+// Function to update tether and dual battery status
+void tether_dual_battery(float tether_status, float batt1_V, float batt2_V) {
+  uint16_t custom_colors[] = { RED, GREEN };
 
-  if (YAW == 1.0) {
-    strcpy(bufferYAW, "1.0");
-  } else {
-    dtostrf(YAW, 3, 2, bufferYAW);
-    if (bufferYAW[0] == '0') {
-      memmove(bufferYAW, bufferYAW + 1, strlen(bufferYAW));
-    }
+  int temp_tether_status = tether_status;
+
+  if (temp_tether_status != tether_old) {
+    uint16_t tether_color = custom_colors[temp_tether_status];
+
+    tft.fillRect(1, HEIGHT - 40 + 1, WIDTH / 2 - 2, 40 - 2, tether_color);
+
+    tft.setTextColor(WHITE);
+    tft.setTextSize(3);
+
+    tft.setCursor(26, HEIGHT - 30);
+    tft.println("TETHER");
+    
+    tether_old = temp_tether_status;
   }
 
-  if (X == 1.0) {
-    strcpy(bufferX, "1.0");
-  } else {
-    dtostrf(X, 3, 2, bufferX);
-    if (bufferX[0] == '0') {
-      memmove(bufferX, bufferX + 1, strlen(bufferX));
-    }
-  }
+  float battery_difference = batt2_V - batt1_V;
+  bool temp_battery_status = battery_difference > 0.52 && battery_difference < 0.63;
 
-  if (Y == 1.0) {
-    strcpy(bufferY, "1.0");
-  } else {
-    dtostrf(Y, 3, 2, bufferY);
-    if (bufferY[0] == '0') {
-      memmove(bufferY, bufferY + 1, strlen(bufferY));
-    }
-  }
+  if (temp_battery_status != dual_batt_old) {
+    uint16_t dual_batt_color = custom_colors[temp_battery_status];
 
-  if (Z == 1.0) {
-    strcpy(bufferZ, "1.0");
-  } else {
-    dtostrf(Z, 3, 2, bufferZ);
-    if (bufferZ[0] == '0') {
-      memmove(bufferZ, bufferZ + 1, strlen(bufferZ));
-    }
-  }
+    tft.fillRect(1 + WIDTH / 2, HEIGHT - 40 + 1, WIDTH / 2 - 2, 40 - 2, dual_batt_color);
 
-  String temp_positions[] = { bufferYAW, bufferX, bufferY, bufferZ };
+    tft.setTextColor(WHITE);
+    tft.setTextSize(3);
 
-  for (int i = 0; i < 4; i++) {
-    int x = i * WIDTH / 4;
-
-    if (temp_positions[i] != positions_old[i]) {
-      tft.fillRect(x + 1 + 8, HEIGHT - 40 + 1 + 6, WIDTH / 4 - 2 - 8, 38 - 6, WHITE);
-
-      tft.setCursor(x + 5, HEIGHT - 33);
-      tft.setTextColor(BLACK);
-      tft.setTextSize(4);
-      tft.println(temp_positions[i]);
-    }
-  }
-
-  for (int i = 0; i < 4; i++) {
-    positions_old[i] = temp_positions[i];
+    tft.setCursor(8 + WIDTH / 2, HEIGHT - 30);
+    tft.println("DUAL BAT");
+    
+    dual_batt_old = temp_battery_status;
   }
 }
 
@@ -472,24 +439,8 @@ void statusMessageCallback(const std_msgs::String& msg) {
   status_new = msg.data;
 }
 
-// Callback function for position W message
-void positionYAWMessageCallback(const std_msgs::Float32& msg) {
-  positions_new[0] = msg.data;
-}
-
-// Callback function for position X message
-void positionXMessageCallback(const std_msgs::Float32& msg) {
-  positions_new[1] = msg.data;
-}
-
-// Callback function for position Y message
-void positionYMessageCallback(const std_msgs::Float32& msg) {
-  positions_new[2] = msg.data;
-}
-
-// Callback function for position Z message
-void positionZMessageCallback(const std_msgs::Float32& msg) {
-  positions_new[3] = msg.data;
+void tetherStatusMessageCallback(const std_msgs::Int32& msg) {
+  tether_new = msg.data;
 }
 
 // Define publisher message variable
@@ -497,7 +448,7 @@ std_msgs::Float64 depth_msg;
 
 // Define publishers and subscribers
 // Publishes depth
-// Subscribes to battery voltages, thruster microseconds, device statuses, status message, and positions
+// Subscribes to battery voltages, thruster microseconds, device statuses, status message, and tether status
 ros::Publisher DEPTH("/sensors/depth/z", &depth_msg);
 ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
 ros::Subscriber<std_msgs::Float32> BATT1("/display/batteries/voltage/1", &batt1MessageCallback);
@@ -510,10 +461,7 @@ ros::Subscriber<std_msgs::Int32> DEVICEACT("/sensors/actuator/status", &devicesA
 ros::Subscriber<std_msgs::Int32> DEVICEFC("/sensors/front_camera/status", &devicesFCMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEDC("/sensors/down_camera/status", &devicesDCMessageCallback);
 ros::Subscriber<std_msgs::String> STATUSMESSAGE("/mission_display", &statusMessageCallback);
-ros::Subscriber<std_msgs::Float32> POSITIONYAW("/state/theta/z", &positionYAWMessageCallback);
-ros::Subscriber<std_msgs::Float32> POSITIONX("/state/x", &positionXMessageCallback);
-ros::Subscriber<std_msgs::Float32> POSITIONY("/state/y", &positionYMessageCallback);
-ros::Subscriber<std_msgs::Float32> POSITIONZ("/state/z", &positionZMessageCallback);
+ros::Subscriber<std_msgs::Int32> TETHER("/tether/status", &tetherStatusMessageCallback);
 
 // Function to calculate and publish depth
 void publish_depth() {
@@ -532,7 +480,7 @@ void setup() {
 
   // Initialize display
   tft.begin();
-  tft.setRotation(ILI9341_ROTATION_90);
+  tft.setRotation(ILI9341_ROTATION_270);
   tft.setTextColor(BLACK);
   tft.setTextSize(2);
   tft.setCursor(10, 10);
@@ -556,10 +504,7 @@ void setup() {
   nh.subscribe(DEVICEFC);
   nh.subscribe(DEVICEDC);
   nh.subscribe(STATUSMESSAGE);
-  //nh.subscribe(POSITIONYAW);
-  //nh.subscribe(POSITIONX);
-  //nh.subscribe(POSITIONY);
-  //nh.subscribe(POSITIONZ);
+  nh.subscribe(TETHER);
 
   // Advertise ROS publisher
   nh.advertise(DEPTH);
@@ -585,9 +530,8 @@ void loop() {
   thrusters(Sthrusters[0], Sthrusters[1], Sthrusters[2], Sthrusters[3], Sthrusters[4], Sthrusters[5], Sthrusters[6], Sthrusters[7]);
   devices(devices_new[0], devices_new[1], devices_new[2], devices_new[3], devices_new[4], devices_new[5], devices_new[6]);
   status(status_new);
-  //positions(positions_new[0], positions_new[1], positions_new[2], positions_new[3]);
+  tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
 
   // Delay for stability
   delay(10);
 }
-
