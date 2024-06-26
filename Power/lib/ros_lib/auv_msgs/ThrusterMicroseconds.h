@@ -13,14 +13,14 @@ namespace auv_msgs
   {
     public:
       uint16_t microseconds[8];
-      enum { FRONT_LEFT = 0 };
-      enum { FRONT_RIGHT = 1 };
-      enum { BACK_LEFT = 2 };
-      enum { BACK_RIGHT = 3 };
-      enum { HEAVE_FRONT_LEFT = 4 };
+      enum { BACK_LEFT = 0 };
+      enum { HEAVE_BACK_LEFT = 1 };
+      enum { HEAVE_FRONT_LEFT = 2 };
+      enum { FRONT_LEFT = 3 };
+      enum { FRONT_RIGHT = 4 };
       enum { HEAVE_FRONT_RIGHT = 5 };
-      enum { HEAVE_BACK_LEFT = 6 };
-      enum { HEAVE_BACK_RIGHT = 7 };
+      enum { HEAVE_BACK_RIGHT = 6 };
+      enum { BACK_RIGHT = 7 };
 
     ThrusterMicroseconds():
       microseconds()
@@ -50,7 +50,7 @@ namespace auv_msgs
     }
 
     virtual const char * getType() override { return "auv_msgs/ThrusterMicroseconds"; };
-    virtual const char * getMD5() override { return "977f0af6489b2a8be49d4eeb26297194"; };
+    virtual const char * getMD5() override { return "ce83c915b46f480a1b250f5617138b15"; };
 
   };
 

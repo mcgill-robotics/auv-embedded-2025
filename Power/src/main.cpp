@@ -43,6 +43,16 @@ float Bvoltages[2];
 
 // updates thrusters' pwm signals from array
 void updateThrusters(const uint16_t microseconds[8]) {
+<<<<<<< PowerBoardRos
+  thrusters[BACK_L].writeMicroseconds(microseconds[BACK_L]);
+  thrusters[HEAVE_BACK_L].writeMicroseconds(microseconds[HEAVE_BACK_L]);
+  thrusters[HEAVE_FRONT_L].writeMicroseconds(microseconds[HEAVE_FRONT_L]);
+  thrusters[FRONT_L].writeMicroseconds(microseconds[FRONT_L]);
+  thrusters[FRONT_R].writeMicroseconds(microseconds[FRONT_R]);
+  thrusters[HEAVE_FRONT_R].writeMicroseconds(microseconds[HEAVE_FRONT_R]);
+  thrusters[BACK_R].writeMicroseconds(microseconds[BACK_R]);
+  thrusters[HEAVE_BACK_R].writeMicroseconds(microseconds[HEAVE_BACK_R]);
+=======
 	thrusters[BACK_L].writeMicroseconds(microseconds[BACK_L]);
 	thrusters[HEAVE_BACK_L].writeMicroseconds(microseconds[HEAVE_BACK_L]);
 	thrusters[HEAVE_FRONT_L].writeMicroseconds(microseconds[HEAVE_FRONT_L]);
@@ -51,15 +61,32 @@ void updateThrusters(const uint16_t microseconds[8]) {
 	thrusters[HEAVE_FRONT_R].writeMicroseconds(microseconds[HEAVE_FRONT_R]);
 	thrusters[BACK_R].writeMicroseconds(microseconds[BACK_R]);
 	thrusters[HEAVE_BACK_R].writeMicroseconds(microseconds[HEAVE_BACK_R]);
+>>>>>>> main
 }
 
 // updates microseconds array with values from ros
 void commandCb(const auv_msgs::ThrusterMicroseconds &tc) {
+<<<<<<< PowerBoardRos
+  memcpy(microseconds, tc.microseconds, 8 * sizeof(uint16_t));
+=======
 	memcpy(microseconds, tc.microseconds, 8 * sizeof(uint16_t));
+>>>>>>> main
 }
 
 // attaches and arms thrusters
 void initThrusters() {
+<<<<<<< PowerBoardRos
+  thrusters[BACK_L].attach(BACK_L_PIN);
+  thrusters[HEAVE_BACK_L].attach(HEAVE_BACK_L_PIN);
+  thrusters[HEAVE_FRONT_L].attach(HEAVE_FRONT_L_PIN);
+  thrusters[FRONT_L].attach(FRONT_L_PIN);
+  thrusters[FRONT_R].attach(FRONT_R_PIN);
+  thrusters[HEAVE_FRONT_R].attach(HEAVE_FRONT_R_PIN);
+  thrusters[HEAVE_BACK_R].attach(HEAVE_BACK_R_PIN);
+  thrusters[BACK_R].attach(BACK_R_PIN);
+
+  updateThrusters(offCommand);
+=======
 	thrusters[BACK_L].attach(BACK_L_PIN);
 	thrusters[HEAVE_BACK_L].attach(HEAVE_BACK_L_PIN);
 	thrusters[HEAVE_FRONT_L].attach(HEAVE_FRONT_L_PIN);
@@ -70,6 +97,7 @@ void initThrusters() {
 	thrusters[BACK_R].attach(BACK_R_PIN);
 
 	updateThrusters(offCommand);
+>>>>>>> main
 }
 
 // sets up ros publisher and subscriber nodes
@@ -80,12 +108,33 @@ ros::Publisher batt2_voltage("/display/batteries/voltage/2", &batt2_voltage_msg)
 
 // senses the voltages of the 2 batteries
 void senseVoltage(float Bvoltages[]) {
-	Bvoltages[0] = analogRead(VBAT1_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
-	Bvoltages[1] = analogRead(VBAT2_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
+  Bvoltages[0] = analogRead(VBAT1_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
+  Bvoltages[1] = analogRead(VBAT2_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
 }
 
 // updates values sensed onto the ros nodes and publishes them
 void publishVoltages() {
+<<<<<<< PowerBoardRos
+  senseVoltage(Bvoltages);
+
+  batt1_voltage_msg.data = Bvoltages[0];
+  batt2_voltage_msg.data = Bvoltages[1];
+
+  batt1_voltage.publish(&batt1_voltage_msg);
+  batt2_voltage.publish(&batt2_voltage_msg);
+}
+
+void setup() {
+  initThrusters();
+
+  pinMode(VBAT1_SENSE, INPUT);
+  pinMode(VBAT2_SENSE, INPUT);
+
+  nh.initNode();
+  nh.subscribe(sub);
+  nh.advertise(batt1_voltage);
+  nh.advertise(batt2_voltage);
+=======
 	senseVoltage(Bvoltages);
 
 	batt1_voltage_msg.data = Bvoltages[0];
@@ -105,14 +154,24 @@ void setup() {
 	nh.subscribe(sub);
 	nh.advertise(batt1_voltage);
 	nh.advertise(batt2_voltage);
+>>>>>>> main
 }
 
 void loop() {
-	updateThrusters(microseconds);
+  updateThrusters(microseconds);
 
+<<<<<<< PowerBoardRos
+  publishVoltages();
+
+  nh.spinOnce();
+
+  delay(10);
+}
+=======
 	publishVoltages();
 
 	nh.spinOnce();
 
 	delay(10);
 }
+>>>>>>> main
