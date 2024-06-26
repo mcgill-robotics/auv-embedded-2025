@@ -52,10 +52,8 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 ros::NodeHandle nh;
-auv_msgs::HydrophonePayload hmsg1, hmsg2, hmsg3;
-ros::Publisher hpub1("hydrophone_1", &hmsg1);
-ros::Publisher hpub2("hydrophone_2", &hmsg2);
-ros::Publisher hpub3("hydrophone_3", &hmsg3);
+auv_msgs::HydrophonePayload hmsg;
+ros::Publisher hpub1("hydrophones", &hmsg);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -170,19 +168,18 @@ int main(void)
   float32_t v3Sum = 0;
   float32_t v3SumSquares = 0;
   uint32_t index = 0;
+  uint32_t times[3];
+  uint32_t frequency0 = 0;
+  uint32_t frequency1 = 0;
+  uint32_t frequency2 = 0;
   HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
   for (int i = 0; i < 512; i++) {
 	  hydrophone1[2*i + 1] = 0;
 	  hydrophone2[2*i + 1] = 0;
 	  hydrophone3[2*i + 1] = 0;
   }
-  hmsg1.hydrophone = 1;
-  hmsg2.hydrophone = 2;
-  hmsg3.hydrophone = 3;
   nh.initNode();
   nh.advertise(hpub1);
-  nh.advertise(hpub2);
-  nh.advertise(hpub3);
   HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
@@ -200,11 +197,11 @@ int main(void)
 		  }
 		  conversionComplete = 0;
       if (i == 0)
-        hmsg1.time = usecs_elapsed;
+        times[0] = usecs_elapsed;
       if (i == 1)
-        hmsg2.time = usecs_elapsed;
+        times[1] = usecs_elapsed;
       if (i == 3)
-        hmsg3.time = usecs_elapsed;
+        times[3] = usecs_elapsed;
       switch (curPhone) {
       	case INIT:
       		break;
@@ -234,28 +231,18 @@ int main(void)
     calculateVariance(&v1Sum, &v1SumSquares, &v1Variance);
     calculateVariance(&v2Sum, &v2SumSquares, &v2Variance);
     calculateVariance(&v3Sum, &v3SumSquares, &v3Variance);
-    hmsg1.frequency = get_frequency(hydrophone1, 1024, 4705882.3529);
-    hmsg2.frequency = get_frequency(hydrophone2, 1024, 4705882.3529);
-    hmsg3.frequency = get_frequency(hydrophone3, 1024, 4705882.3529);
-	  v2Sum = 0;
-	  v2SumSquares = 0;
-    if (v1Variance > 0.001) {
-    	printf("variance of hydrophone 1: %f\r\n", v1Variance);
-		  printf("frequency from hydrophone 1: %lu\r\n", hmsg1.frequency);
-		  printf("time from hydrophone 1: %lu\r\n", hmsg1.time);
-      hpub1.publish(&hmsg1);
-    }
-    if (v2Variance > 0.001) {
-    	printf("variance of hydrophone 2: %f\r\n", v2Variance);
-		  printf("frequency from hydrophone 2: %lu\r\n", hmsg2.frequency);
-		  printf("time from hydrophone 2: %lu\r\n", hmsg2.time);
-      hpub2.publish(&hmsg2);
-    }
-    if (v3Variance > 0.001) {
-    	printf("variance of hydrophone 3: %f\r\n", v3Variance);
-		  printf("frequency from hydrophone 3: %lu\r\n", hmsg3.frequency);
-		  printf("time from hydrophone 3: %lu\r\n", hmsg3.time);
-      hpub3.publish(&hmsg3);
+    frequency0 = get_frequency(hydrophone1, 1024, 4705882.3529);
+    frequency1 = get_frequency(hydrophone2, 1024, 4705882.3529);
+    frequency2 = get_frequency(hydrophone3, 1024, 4705882.3529);
+    v1Sum = 0;
+    v1SumSquares = 0;
+	v2Sum = 0;
+	v2SumSquares = 0;
+	v3Sum = 0;
+	v3SumSquares = 0;
+    if (frequency0 == frequency1 && frequency0 == frequency2) {
+		printf("frequency from hydrophones: %lu\r\n", frequency0);
+      hpub1.publish(&hmsg);
     }
 	  nh.spinOnce();
 

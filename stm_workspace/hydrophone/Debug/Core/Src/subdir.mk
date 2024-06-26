@@ -1,9 +1,15 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (11.3.rel1)
+# Toolchain: GNU Tools for STM32 (12.3.rel1)
 ################################################################################
 
 # Add inputs and outputs from these tool invocations to the build variables 
+CPP_SRCS += \
+../Core/Src/duration.cpp \
+../Core/Src/main.cpp \
+../Core/Src/mainpp.cpp \
+../Core/Src/time.cpp 
+
 C_SRCS += \
 ../Core/Src/ping.c \
 ../Core/Src/stm32l4xx_hal_msp.c \
@@ -11,12 +17,6 @@ C_SRCS += \
 ../Core/Src/syscalls.c \
 ../Core/Src/sysmem.c \
 ../Core/Src/system_stm32l4xx.c 
-
-CPP_SRCS += \
-../Core/Src/duration.cpp \
-../Core/Src/main.cpp \
-../Core/Src/mainpp.cpp \
-../Core/Src/time.cpp 
 
 C_DEPS += \
 ./Core/Src/ping.d \
