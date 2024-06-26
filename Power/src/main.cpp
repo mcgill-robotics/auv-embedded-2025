@@ -4,28 +4,28 @@
 #include <std_msgs/Float32.h>
 
 // defines thruster pins
-#define FRONT_L_PIN 2
-#define FRONT_R_PIN 3
-#define BACK_L_PIN 4
-#define BACK_R_PIN 5
-#define HEAVE_FRONT_L_PIN 6
+#define BACK_L_PIN 2
+#define HEAVE_BACK_L_PIN 3
+#define HEAVE_FRONT_L_PIN 4
+#define FRONT_L_PIN 5
+#define FRONT_R_PIN 6
 #define HEAVE_FRONT_R_PIN 7
-#define HEAVE_BACK_L_PIN 8
-#define HEAVE_BACK_R_PIN 9
+#define HEAVE_BACK_R_PIN 8
+#define BACK_R_PIN 9
 
 // defines voltage sensing pins
 #define VBAT1_SENSE 22
 #define VBAT2_SENSE 23
 
 // defines 8 thursters for ROS subscribing
+const uint8_t BACK_L = auv_msgs::ThrusterMicroseconds::BACK_LEFT;
+const uint8_t HEAVE_BACK_L = auv_msgs::ThrusterMicroseconds::HEAVE_BACK_LEFT;
+const uint8_t HEAVE_FRONT_L = auv_msgs::ThrusterMicroseconds::HEAVE_FRONT_LEFT;
 const uint8_t FRONT_L = auv_msgs::ThrusterMicroseconds::FRONT_LEFT;
 const uint8_t FRONT_R = auv_msgs::ThrusterMicroseconds::FRONT_RIGHT;
-const uint8_t BACK_L = auv_msgs::ThrusterMicroseconds::BACK_LEFT;
-const uint8_t BACK_R = auv_msgs::ThrusterMicroseconds::BACK_RIGHT;
-const uint8_t HEAVE_FRONT_L = auv_msgs::ThrusterMicroseconds::HEAVE_FRONT_LEFT;
 const uint8_t HEAVE_FRONT_R = auv_msgs::ThrusterMicroseconds::HEAVE_FRONT_RIGHT;
-const uint8_t HEAVE_BACK_L = auv_msgs::ThrusterMicroseconds::HEAVE_BACK_LEFT;
 const uint8_t HEAVE_BACK_R = auv_msgs::ThrusterMicroseconds::HEAVE_BACK_RIGHT;
+const uint8_t BACK_R = auv_msgs::ThrusterMicroseconds::BACK_RIGHT;
 
 // defines 2 battery voltage sensing for ROS advertising
 std_msgs::Float32 batt1_voltage_msg;
@@ -43,14 +43,14 @@ float Bvoltages[2];
 
 // updates thrusters' pwm signals from array
 void updateThrusters(const uint16_t microseconds[8]) {
+	thrusters[BACK_L].writeMicroseconds(microseconds[BACK_L]);
+	thrusters[HEAVE_BACK_L].writeMicroseconds(microseconds[HEAVE_BACK_L]);
+	thrusters[HEAVE_FRONT_L].writeMicroseconds(microseconds[HEAVE_FRONT_L]);
 	thrusters[FRONT_L].writeMicroseconds(microseconds[FRONT_L]);
 	thrusters[FRONT_R].writeMicroseconds(microseconds[FRONT_R]);
-	thrusters[BACK_L].writeMicroseconds(microseconds[BACK_L]);
-	thrusters[BACK_R].writeMicroseconds(microseconds[BACK_R]);
-	thrusters[HEAVE_FRONT_L].writeMicroseconds(microseconds[HEAVE_FRONT_L]);
 	thrusters[HEAVE_FRONT_R].writeMicroseconds(microseconds[HEAVE_FRONT_R]);
+	thrusters[BACK_R].writeMicroseconds(microseconds[BACK_R]);
 	thrusters[HEAVE_BACK_R].writeMicroseconds(microseconds[HEAVE_BACK_R]);
-	thrusters[HEAVE_BACK_L].writeMicroseconds(microseconds[HEAVE_BACK_L]);
 }
 
 // updates microseconds array with values from ros
@@ -60,14 +60,14 @@ void commandCb(const auv_msgs::ThrusterMicroseconds &tc) {
 
 // attaches and arms thrusters
 void initThrusters() {
+	thrusters[BACK_L].attach(BACK_L_PIN);
+	thrusters[HEAVE_BACK_L].attach(HEAVE_BACK_L_PIN);
+	thrusters[HEAVE_FRONT_L].attach(HEAVE_FRONT_L_PIN);
 	thrusters[FRONT_L].attach(FRONT_L_PIN);
 	thrusters[FRONT_R].attach(FRONT_R_PIN);
-	thrusters[BACK_L].attach(BACK_L_PIN);
-	thrusters[BACK_R].attach(BACK_R_PIN);
-	thrusters[HEAVE_FRONT_L].attach(HEAVE_FRONT_L_PIN);
 	thrusters[HEAVE_FRONT_R].attach(HEAVE_FRONT_R_PIN);
-	thrusters[HEAVE_BACK_L].attach(HEAVE_BACK_L_PIN);
 	thrusters[HEAVE_BACK_R].attach(HEAVE_BACK_R_PIN);
+	thrusters[BACK_R].attach(BACK_R_PIN);
 
 	updateThrusters(offCommand);
 }
