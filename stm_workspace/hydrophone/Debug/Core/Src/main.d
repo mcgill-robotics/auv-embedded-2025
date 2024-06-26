@@ -39,7 +39,7 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
  ../Core/Inc/rosserial_msgs/RequestParam.h ../Core/Inc/ros/publisher.h \
  ../Core/Inc/ros/node_handle.h ../Core/Inc/ros/subscriber.h \
  ../Core/Inc/ros/service_server.h ../Core/Inc/ros/service_client.h \
- ../Core/Inc/STM32Hardware.h ../Core/Inc/auv_msgs/HydrophonePayload.h
+ ../Core/Inc/STM32Hardware.h ../Core/Inc/auv_msgs/PingerTimeDifference.h
 ../Core/Inc/main.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
@@ -92,4 +92,4 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
 ../Core/Inc/ros/service_server.h:
 ../Core/Inc/ros/service_client.h:
 ../Core/Inc/STM32Hardware.h:
-../Core/Inc/auv_msgs/HydrophonePayload.h:
+../Core/Inc/auv_msgs/PingerTimeDifference.h:

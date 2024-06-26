@@ -22,7 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <ros.h>
-#include <auv_msgs/HydrophonePayload.h>
+#include <auv_msgs/PingerTimeDifference.h>.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,8 +52,8 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 ros::NodeHandle nh;
-auv_msgs::HydrophonePayload hmsg;
-ros::Publisher hpub1("hydrophones", &hmsg);
+auv_msgs::PingerTimeDifference hmsg;
+ros::Publisher hpub("/sensors/hydrophones/pinger_time_difference", &hmsg);
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -110,13 +110,6 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
   nh.getHardware()->reset_rbuf();
-}
-
-void updateMessage(auv_msgs::HydrophonePayload& msg, uint32_t frequency, uint32_t time, uint8_t hnum)
-{
-	msg.frequency = frequency;
-	msg.time = time;
-	msg.hydrophone = hnum;
 }
 
 /* USER CODE END 0 */
@@ -179,7 +172,7 @@ int main(void)
 	  hydrophone3[2*i + 1] = 0;
   }
   nh.initNode();
-  nh.advertise(hpub1);
+  nh.advertise(hpub);
   HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
@@ -196,12 +189,8 @@ int main(void)
 			  continue;
 		  }
 		  conversionComplete = 0;
-      if (i == 0)
-        times[0] = usecs_elapsed;
-      if (i == 1)
-        times[1] = usecs_elapsed;
-      if (i == 3)
-        times[3] = usecs_elapsed;
+      if (i < 3)
+    	  times[i] = usecs_elapsed;
       switch (curPhone) {
       	case INIT:
       		break;
@@ -241,8 +230,10 @@ int main(void)
 	v3Sum = 0;
 	v3SumSquares = 0;
     if (frequency0 == frequency1 && frequency0 == frequency2) {
-		printf("frequency from hydrophones: %lu\r\n", frequency0);
-      hpub1.publish(&hmsg);
+		hmsg.frequency = frequency0;
+		hmsg.times = times;
+		hmsg.times_length = 3;
+		hpub.publish(&hmsg);
     }
 	  nh.spinOnce();
 
