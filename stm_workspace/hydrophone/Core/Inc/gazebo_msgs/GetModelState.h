@@ -5,8 +5,8 @@
 #include <stdlib.h>
 #include "ros/msg.h"
 #include "geometry_msgs/Twist.h"
-#include "geometry_msgs/Pose.h"
 #include "std_msgs/Header.h"
+#include "geometry_msgs/Pose.h"
 
 namespace gazebo_msgs
 {
