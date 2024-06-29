@@ -13,8 +13,8 @@
 #include <math.h>
 
 // Define pin configurations
-#define TFT_DC 9
-#define TFT_CS 10
+#define TFT_DC 18
+#define TFT_CS 19
 
 // Define rotation constants
 #define ILI9341_ROTATION_0 0
