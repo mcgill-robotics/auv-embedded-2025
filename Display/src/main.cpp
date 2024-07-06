@@ -58,7 +58,7 @@ float batt_voltage_1_new = 0;
 float batt_voltage_2_new = 0;
 int thrusters_new[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 int devices_new[] = { 0, 0, 0, 0, 0, 0, 0 };
-String status_new = "JP is my father!";
+String status_new = "Hello World!";
 int tether_new = 0;
 
 // Define global variables for display functions
@@ -375,18 +375,18 @@ void tether_dual_battery(float tether_status, float batt1_V, float batt2_V) {
 
 // function to update thruster statuses
 void thrusterStatus(int Sthrusters[]) {
-	for (int i = 0; i < 8; i++) {
-		if (microseconds[i] == 1500) {
-			Sthrusters[i] = 0;
-		} else {
-			Sthrusters[i] = 1;
-		}
-	}
+  for (int i = 0; i < 8; i++) {
+    if (microseconds[i] == 1500) {
+      Sthrusters[i] = 0;
+    } else {
+      Sthrusters[i] = 1;
+    }
+  }
 }
 
 // Callback function that updates microseconds array with values from ros
 void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
-	memcpy(microseconds, tc.microseconds, 8*sizeof(uint16_t));
+  memcpy(microseconds, tc.microseconds, 8*sizeof(uint16_t));
   thrusterStatus(Sthrusters);
 }
 
