@@ -168,18 +168,19 @@ void batt1(float V1) {
   voltages_new[0] = V1;
   if (voltages_old[0] != voltages_new[0]) {
     voltages_old[0] = voltages_new[0];
-    if (V1 <= 12.8) {
-      if (!BATT1_EMPTY) {
-        tft.setTextColor(BLACK);
-        batt_colours[0] = WHITE;
-        tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
-        tft.setCursor(8, 25);
-        tft.setTextSize(5);
-        tft.println("EMPTY");
-        BATT1_EMPTY = true;
-      }
-      return;
-    } else if (V1 <= 14.8) {
+    // if (V1 <= 12.8) {
+    //   if (!BATT1_EMPTY) {
+    //     tft.setTextColor(BLACK);
+    //     batt_colours[0] = WHITE;
+    //     tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
+    //     tft.setCursor(8, 25);
+    //     tft.setTextSize(5);
+    //     tft.println("EMPTY");
+    //     BATT1_EMPTY = true;
+    //   }
+    //   return;
+    // } else 
+    if (V1 <= 14.8) {
       batt_colours[0] = RED;
     } else if (V1 <= 15.8) {
       batt_colours[0] = YELLOW;
@@ -209,18 +210,19 @@ void batt2(float V2) {
   voltages_new[1] = V2;
   if (voltages_old[1] != voltages_new[1]) {
     voltages_old[1] = voltages_new[1];
-    if (V2 <= 12.8) {
-      if (!BATT2_EMPTY) {
-        tft.setTextColor(BLACK);
-        batt_colours[1] = WHITE;
-        tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
-        tft.setCursor(WIDTH / 2 + 8, 25);
-        tft.setTextSize(5);
-        tft.println("EMPTY");
-        BATT2_EMPTY = true;
-      }
-      return;
-    } else if (V2 <= 14.8) {
+    // if (V2 <= 12.8) {
+    //   if (!BATT2_EMPTY) {
+    //     tft.setTextColor(BLACK);
+    //     batt_colours[1] = WHITE;
+    //     tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
+    //     tft.setCursor(WIDTH / 2 + 8, 25);
+    //     tft.setTextSize(5);
+    //     tft.println("EMPTY");
+    //     BATT2_EMPTY = true;
+    //   }
+    //   return;
+    // } else 
+    if (V2 <= 14.8) {
       batt_colours[1] = RED;
     } else if (V2 <= 15.8) {
       batt_colours[1] = YELLOW;
