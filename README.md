@@ -1,6 +1,6 @@
-# McGill Robotics AUV Embedded 2024
+# McGill Robotics AUV Embedded 2025
 
-Welcome to the AUV Embedded 2024 repository! This repository is created and maintained by the 2024 McGill Robotics AUV Electrical team. It serves as a platform for sharing, calibrating, and version-controlling the embedded software we develop for our Autonomous Underwater Vehicle (AUV).
+Welcome to the AUV Embedded 2025 repository! This repository is created and maintained by the 2025 McGill Robotics AUV Electrical team. It serves as a platform for sharing, calibrating, and version-controlling the embedded software we develop for our Autonomous Underwater Vehicle (AUV).
 
 ## About Us
 
@@ -12,4 +12,4 @@ We are a dedicated team of students from McGill Robotics, focused on designing a
 - **Team Structure**: Information about our team members and roles.
 - **Tutorials**: Guides and tutorials on using ROS (Robot Operating System) and Arduino for our projects.
 
-For more detail please visit our [Wiki](https://github.com/mcgill-robotics/auv-embedded-2024/wiki).
+For more detail please visit our [Wiki](https://github.com/mcgill-robotics/auv-embedded-2025/wiki).
