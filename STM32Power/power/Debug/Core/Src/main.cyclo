@@ -1,0 +1,7 @@
+../Core/Src/main.c:63:10:PWM_CalculatePulseWidth	1
+../Core/Src/main.c:74:5:main	1
+../Core/Src/main.c:225:6:SystemClock_Config	4
+../Core/Src/main.c:270:13:MX_TIM1_Init	10
+../Core/Src/main.c:362:13:MX_TIM2_Init	9
+../Core/Src/main.c:433:13:MX_GPIO_Init	1
+../Core/Src/main.c:453:6:Error_Handler	1

@@ -1,0 +1,7 @@
+../Core/Src/main.c:63:10:PWM_CalculatePulseWidth	32	static
+../Core/Src/main.c:74:5:main	40	static
+../Core/Src/main.c:225:6:SystemClock_Config	96	static
+../Core/Src/main.c:270:13:MX_TIM1_Init	112	static
+../Core/Src/main.c:362:13:MX_TIM2_Init	64	static
+../Core/Src/main.c:433:13:MX_GPIO_Init	16	static
+../Core/Src/main.c:453:6:Error_Handler	4	static,ignoring_inline_asm
