@@ -18,14 +18,14 @@
 #define VBAT2_SENSE 23
 
 // defines 8 thursters for ROS subscribing
-const uint8_t FRONT_L = auv_msgs::ThrusterMicroseconds::FRONT_LEFT;
-const uint8_t FRONT_R = auv_msgs::ThrusterMicroseconds::FRONT_RIGHT;
-const uint8_t BACK_L = auv_msgs::ThrusterMicroseconds::BACK_LEFT;
-const uint8_t BACK_R = auv_msgs::ThrusterMicroseconds::BACK_RIGHT;
-const uint8_t HEAVE_FRONT_L = auv_msgs::ThrusterMicroseconds::HEAVE_FRONT_LEFT;
-const uint8_t HEAVE_FRONT_R = auv_msgs::ThrusterMicroseconds::HEAVE_FRONT_RIGHT;
-const uint8_t HEAVE_BACK_L = auv_msgs::ThrusterMicroseconds::HEAVE_BACK_LEFT;
-const uint8_t HEAVE_BACK_R = auv_msgs::ThrusterMicroseconds::HEAVE_BACK_RIGHT;
+const uint8_t FRONT_L = 0;
+const uint8_t FRONT_R = 1;
+const uint8_t BACK_L = 2; //
+const uint8_t BACK_R = 3; //
+const uint8_t HEAVE_FRONT_L = 4;
+const uint8_t HEAVE_FRONT_R = 5;
+const uint8_t HEAVE_BACK_L = 6; //
+const uint8_t HEAVE_BACK_R = 7; //
 
 // defines 2 battery voltage sensing for ROS advertising
 std_msgs::Float32 batt1_voltage_msg;
@@ -97,6 +97,9 @@ void publishVoltages() {
 
 void setup() {
 	initThrusters();
+
+	pinMode(13, OUTPUT);
+	digitalWrite(13, HIGH);
 
 	pinMode(VBAT1_SENSE, INPUT);
 	pinMode(VBAT2_SENSE, INPUT);
