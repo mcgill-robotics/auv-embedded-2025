@@ -1,6 +1,3 @@
-#ifdef POWER_H
-
-#include <Arduino.h>
 #include "power_main.h"
 
 void power_setup(){
@@ -10,5 +7,3 @@ void power_setup(){
 void power_loop(){
     // put your main code here, to run repeatedly:
 }
-
-#endif
