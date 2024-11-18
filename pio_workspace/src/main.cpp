@@ -12,7 +12,11 @@ void setup() {
   #ifdef ACTUATOR_H
   actuator_setup();
   #elif DISPLAY_H
-  display_setup
+  display_setup();
+  #elif POWER_H
+  power_setup();
+  #endif
+}
 
 void loop() {
   #ifdef ACTUATOR_H

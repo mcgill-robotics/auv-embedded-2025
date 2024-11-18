@@ -35,24 +35,30 @@ rcl_timer_t timer;
 #define RCSOFTCHECK(fn) { rcl_ret_t temp_rc = fn; if((temp_rc != RCL_RET_OK)){}}
 
 
-void error_loop(){
-  free(msg.data.data);
+void error_loop() {
+  // Ensure msg.data.data is allocated before freeing
+  if (msg.data.data != NULL) {
+    free(msg.data.data);
+  }
 
-  while(1){
+  int error = 0;
+  
+  while(error <= 20) {
     digitalWrite(LED_PIN, !digitalRead(LED_PIN));
     delay(100);
+
+    error += 1;
   }
 }
 
-// creates array of 8 thrusters
+// Creates array of 8 thrusters
 Servo thrusters[8];
 
-// signals to push to thrusters
+// Signals to push to thrusters
 int16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 const int16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 
-void subscription_callback(const void * msgin)
-{
+void subscription_callback(const void * msgin) {
     const std_msgs__msg__Int16MultiArray * msg = (const std_msgs__msg__Int16MultiArray *)msgin;
 
     // Ensure we don't exceed the size of the `microseconds` array
@@ -61,66 +67,64 @@ void subscription_callback(const void * msgin)
     }
 }
 
-// updates thrusters' pwm signals from array
+// Updates thrusters' PWM signals from array
 void updateThrusters(const int16_t microseconds[8]) {
-	thrusters[0].writeMicroseconds(microseconds[0]);
-	thrusters[1].writeMicroseconds(microseconds[1]);
-	thrusters[2].writeMicroseconds(microseconds[2]);
-	thrusters[3].writeMicroseconds(microseconds[3]);
-	thrusters[4].writeMicroseconds(microseconds[4]);
-	thrusters[5].writeMicroseconds(microseconds[5]);
-	thrusters[6].writeMicroseconds(microseconds[6]);
-	thrusters[7].writeMicroseconds(microseconds[7]);
+    for (int i = 0; i < 8; i++) {
+        thrusters[i].writeMicroseconds(microseconds[i]);
+    }
 }
 
 void initThrusters() {
-	thrusters[0].attach(THRUSTER_1);
-	thrusters[1].attach(THRUSTER_2);
-	thrusters[2].attach(THRUSTER_3);
-	thrusters[3].attach(THRUSTER_4);
-	thrusters[4].attach(THRUSTER_5);
-	thrusters[5].attach(THRUSTER_6);
-	thrusters[6].attach(THRUSTER_7);
-	thrusters[7].attach(THRUSTER_8);
+    thrusters[0].attach(THRUSTER_1);
+    thrusters[1].attach(THRUSTER_2);
+    thrusters[2].attach(THRUSTER_3);
+    thrusters[3].attach(THRUSTER_4);
+    thrusters[4].attach(THRUSTER_5);
+    thrusters[5].attach(THRUSTER_6);
+    thrusters[6].attach(THRUSTER_7);
+    thrusters[7].attach(THRUSTER_8);
 
-	updateThrusters(offCommand);
+    updateThrusters(offCommand);
 }
 
 void power_setup() {
-  set_microros_transports();
+    set_microros_transports();
   
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, HIGH);
 
-  initThrusters();
+    initThrusters();
   
-  delay(2000);
+    delay(2000);
 
-  allocator = rcl_get_default_allocator();
+    allocator = rcl_get_default_allocator();
 
-  //create init_options
-  RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
+    // Create init_options
+    RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
-  // create node
-  RCCHECK(rclc_node_init_default(&node, "power_node", "", &support));
+    // Create node
+    RCCHECK(rclc_node_init_default(&node, "power_node", "", &support));
 
-  // create subscriber
-  RCCHECK(rclc_subscription_init_default(
-    &subscriber,
-    &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
-    "/propulsion/microseconds"));
+    // Create subscriber
+    RCCHECK(rclc_subscription_init_default(
+        &subscriber,
+        &node,
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
+        "/propulsion/microseconds"));
 
     msg.data.data = (int16_t *)malloc(8 * sizeof(int16_t));
     msg.data.size = 8;
     msg.data.capacity = 8;
 
-  // create executor
-  RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
-  RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &msg, &subscription_callback, ON_NEW_DATA));
+    // Create executor
+    RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
+    RCCHECK(rclc_executor_add_subscription(&executor, &subscriber, &msg, &subscription_callback, ON_NEW_DATA));
 }
 
 void power_loop() {
-  updateThrusters(microseconds);
-  RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+    updateThrusters(microseconds);
+    RCCHECK(rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100)));
+
+    // Optional: Add a small delay to prevent high-frequency looping
+    delay(10);
 }
