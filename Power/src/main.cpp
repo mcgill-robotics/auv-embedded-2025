@@ -17,6 +17,13 @@
 #define VBAT1_SENSE 22
 #define VBAT2_SENSE 23
 
+// defines current sensing pins -- UPDATE PIN VALUES
+#define IBAT1_SENSE
+#define IBAT2_SENSE
+
+// defines temperature sensing pin - UPDATE PIN VALUE
+#define TEMP_SENSE 1 
+
 // defines 8 thursters for ROS subscribing
 const uint8_t BACK_L = auv_msgs::ThrusterMicroseconds::BACK_LEFT;
 const uint8_t HEAVE_BACK_L = auv_msgs::ThrusterMicroseconds::HEAVE_BACK_LEFT;
@@ -31,6 +38,13 @@ const uint8_t BACK_R = auv_msgs::ThrusterMicroseconds::BACK_RIGHT;
 std_msgs::Float32 batt1_voltage_msg;
 std_msgs::Float32 batt2_voltage_msg;
 
+// defines 2 current sensing for ROS advertising
+std_msgs::Float32 batt1_current_msg;
+std_msgs::Float32 batt2_current_msg;
+
+// defines temperature sensing for ROS advertising
+std_msgs::Float32 temperature_msg;
+
 // creates array of 8 thrusters
 Servo thrusters[8];
 
@@ -40,6 +54,12 @@ const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 
 // creates array for 2 battery voltage sensing
 float Bvoltages[2];
+
+// creates array for 2 battery current sensing
+float Bcurrents[2];
+
+// creates a float for temperature sensing
+float TEMPERATURE_VAL;
 
 // updates thrusters' pwm signals from array
 void updateThrusters(const uint16_t microseconds[8]) {
@@ -77,11 +97,25 @@ ros::NodeHandle nh;
 ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
 ros::Publisher batt1_voltage("/display/batteries/voltage/1", &batt1_voltage_msg);
 ros::Publisher batt2_voltage("/display/batteries/voltage/2", &batt2_voltage_msg);
+// what to put for topic name...
+ros::Publisher batt1_current("", &batt1_current_msg);
+ros::Publisher batt2_current("", &batt2_current_msg);
+ros::Publisher temperature("", &temperature_msg) 
 
 // senses the voltages of the 2 batteries
 void senseVoltage(float Bvoltages[]) {
   Bvoltages[0] = analogRead(VBAT1_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
   Bvoltages[1] = analogRead(VBAT2_SENSE) * (3.3 / 1024) * 1.6625 + 12.5;
+}
+
+void senseCurrent(float Bcurrents[]) { // need to add the conversion formula
+  Bcurrents[0] = analogRead(IBAT1_SENSE);
+  Bcurrents[1] = analogRead(IBAT2_SENSE);
+}
+
+// sense the temperature
+float senseTemperature() {
+  return reading = (((analogRead(TEMP_SENSE) * 5.0) / 1024.0) - 0.5) * 100
 }
 
 // updates values sensed onto the ros nodes and publishes them
@@ -93,6 +127,23 @@ void publishVoltages() {
 
   batt1_voltage.publish(&batt1_voltage_msg);
   batt2_voltage.publish(&batt2_voltage_msg);
+}
+
+void publishCurrents() {
+  senseCurrent(Bcurrents);
+
+  batt1_current_msg.data = Bcurrents[0];
+  batt2_current_msg.data = Bcurrents[1];
+
+  batt1_current.publish(&batt1_current_msg);
+  batt2_current.publish(&batt2_current_msg);
+}
+
+void publishTemperature() {
+  TEMPERATURE_VAL = senseTemperature();
+  temperature_msg.data = TEMPERATURE_VAL;
+
+  temperature.publish(&temperature_msg);
 }
 
 void setup() {
@@ -111,6 +162,8 @@ void loop() {
   updateThrusters(microseconds);
 
   publishVoltages();
+  publishCurrents();
+  publishTemperature();
 
   nh.spinOnce();
 
