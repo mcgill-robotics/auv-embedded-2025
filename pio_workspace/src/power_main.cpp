@@ -2,13 +2,7 @@
 
 #include <Servo.h>
 
-#include <micro_ros_arduino.h>
-
-#include <stdio.h>
-#include <rcl/rcl.h>
-#include <rcl/error_handling.h>
-#include <rclc/rclc.h>
-#include <rclc/executor.h>
+#include <micro_ros_ardu
 
 #include <std_msgs/msg/int16_multi_array.h>
 
