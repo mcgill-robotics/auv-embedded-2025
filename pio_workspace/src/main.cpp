@@ -10,20 +10,20 @@
 
 void setup() {
   #ifdef ACTUATOR_H
-  actuator_setup();
+    actuator_setup();
   #elif DISPLAY_H
-  display_setup();
+    display_setup();
   #elif POWER_H
-  power_setup();
+    power_setup();
   #endif
 }
 
 void loop() {
   #ifdef ACTUATOR_H
-  actuator_loop();
+    actuator_loop();
   #elif DISPLAY_H
-  display_loop();
+    display_loop();
   #elif POWER_H
-  power_loop();
+    power_loop();
   #endif
 }
