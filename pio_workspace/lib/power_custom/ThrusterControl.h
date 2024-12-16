@@ -25,6 +25,6 @@ extern const int16_t offCommand[8];
 void initThrusters();
 
 // Updates the thrusters' PWM signal
-void updateThrusters(int16_t microseconds[8]);
+void updateThrusters(const int16_t microseconds[8]);
 
 #endif
