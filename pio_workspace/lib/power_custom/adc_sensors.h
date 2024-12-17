@@ -5,9 +5,9 @@
 #include "Wire.h"
 #include "Adafruit_ADS1X15.h"
 
-#define ADC_VOLTAGE_ADDR  0x4B
 #define ADC_CURRENT1_ADDR 0x48
 #define ADC_CURRENT2_ADDR 0x49
+#define ADC_VOLTAGE_ADDR  0x4B
 
 class ADCSensors {
   public:
@@ -21,9 +21,9 @@ class ADCSensors {
     bool voltageEnabled;
     bool currentEnabled;
 
-    Adafruit_ADS1115 adcVoltage;
     Adafruit_ADS1115 adcCurrent1;
     Adafruit_ADS1115 adcCurrent2;
+    Adafruit_ADS1115 adcVoltage;
 
     int16_t rawADCVoltage[2];
     float computedADCVoltage[2];

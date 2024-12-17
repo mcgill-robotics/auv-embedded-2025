@@ -83,7 +83,7 @@ void ADCSensors::refreshCurrent() {
 }
 
 float ADCSensors::convertVoltage(float adcVoltage) {
-  return (adcVoltage - 0.08) * (16.8 - 12.8) / (1.27 - 0.08) + 12.8;
+  return (adcVoltage * 2) * (16.8 - 12.8) / (2.586 - 0.180) + 12.5;
 }
 
 float ADCSensors::convertCurrent(float adcCurrent) {
