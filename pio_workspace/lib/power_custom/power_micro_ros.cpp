@@ -2,11 +2,14 @@
 
 rcl_subscription_t propulsion_microseconds_subscriber;
 std_msgs__msg__Int16MultiArray propulsion_microseconds_msg;
+
+rcl_publisher_t power_board_temperature_publisher;
+std_msgs__msg__Float32 power_board_temperature_msg;
+
 rclc_executor_t executor;
 rclc_support_t support;
 rcl_allocator_t allocator;
 rcl_node_t node;
-rcl_timer_t timer;
 
 void micro_ros_init() {
     set_microros_transports();
@@ -30,6 +33,15 @@ void micro_ros_init() {
     propulsion_microseconds_msg.data.size = 8;
     propulsion_microseconds_msg.data.capacity = 8;
 
+    // create publisher
+  RCCHECK(rclc_publisher_init_default(
+    &power_board_temperature_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
+    "/power/board/temperature"));
+
+    power_board_temperature_msg.data = 0.0;
+
     // Create executor
     RCCHECK(rclc_executor_init(&executor, &support.context, 1, &allocator));
     RCCHECK(rclc_executor_add_subscription(&executor, &propulsion_microseconds_subscriber, &propulsion_microseconds_msg, &propulsion_microseconds_subscription_callback, ON_NEW_DATA));
@@ -45,6 +57,8 @@ void error_loop() {
     free(propulsion_microseconds_msg.data.data);
   }
 
+  power_board_temperature_msg.data = 0.0;
+
   int error = 0;
   
   while(error <= 20) {
@@ -55,6 +69,11 @@ void error_loop() {
   }
 
   digitalWrite(LED_PIN, HIGH);
+}
+
+void power_board_temperature_publish(float power_board_temperature) {
+  power_board_temperature_msg.data = power_board_temperature;
+  RCSOFTCHECK(rcl_publish(&power_board_temperature_publisher, &power_board_temperature_msg, NULL));
 }
 
 void propulsion_microseconds_subscription_callback(const void * msgin) {
