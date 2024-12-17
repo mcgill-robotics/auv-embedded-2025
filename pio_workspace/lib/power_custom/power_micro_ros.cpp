@@ -1,5 +1,13 @@
 #include "power_micro_ros.h"
 
+rcl_subscription_t propulsion_microseconds_subscriber;
+std_msgs__msg__Int16MultiArray propulsion_microseconds_msg;
+rclc_executor_t executor;
+rclc_support_t support;
+rcl_allocator_t allocator;
+rcl_node_t node;
+rcl_timer_t timer;
+
 void micro_ros_init() {
     set_microros_transports();
 
