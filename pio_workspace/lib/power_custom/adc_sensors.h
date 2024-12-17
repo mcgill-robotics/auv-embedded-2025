@@ -5,9 +5,9 @@
 #include "Wire.h"
 #include "Adafruit_ADS1X15.h"
 
-#define ADC_VOLTAGE_ADDR  0x48
-#define ADC_CURRENT1_ADDR 0x49
-#define ADC_CURRENT2_ADDR 0x4B
+#define ADC_VOLTAGE_ADDR  0x4B
+#define ADC_CURRENT1_ADDR 0x48
+#define ADC_CURRENT2_ADDR 0x49
 
 class ADCSensors {
   public:
