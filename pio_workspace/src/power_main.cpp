@@ -15,6 +15,22 @@
 
 MicroROSWrapper micro_ros("power_node");
 
+// Define the subscribers and publishers as rcl_publisher_t and rcl_subscription_t
+rcl_subscription_t* propulsion_microseconds_subscriber;
+rcl_publisher_t* power_thrusters_current_publisher;
+rcl_publisher_t* power_batteries_voltage_publisher;
+rcl_publisher_t* power_board_temprature_publisher;
+rcl_publisher_t* power_teensy_temprature_publisher;
+
+std_msgs__msg__Int16MultiArray propulsion_microseconds_msg;
+std_msgs__msg__Float32MultiArray power_thrusters_current_msg;
+std_msgs__msg__Float32MultiArray power_batteries_voltage_msg;
+std_msgs__msg__Float32 power_board_temperature_msg;
+std_msgs__msg__Float32 power_teensy_temperature_msg;
+
+TMP36 temperatureSensor(23, 3.3);
+ADCSensors adcSensors;
+
 void propulsion_microseconds_callback(const void *msgin) {
     const std_msgs__msg__Int16MultiArray *propulsion_microseconds_msg = (const std_msgs__msg__Int16MultiArray *)msgin;
     // Ensure we don't exceed the size of the `microseconds` array
@@ -22,40 +38,6 @@ void propulsion_microseconds_callback(const void *msgin) {
         microseconds[i] = propulsion_microseconds_msg->data.data[i]; // Access the data correctly
     }
 }
-
-Subscriber propulsion_microseconds_subscriber = micro_ros.createSubscriber(
-    "/propulsion/microseconds",
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
-    propulsion_microseconds_callback);
-    
-std_msgs__msg__Int16MultiArray propulsion_microseconds_msg;
-
-Publisher power_thrusters_current_publisher = micro_ros.createPublisher(
-    "/power/thrusters/current",
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray));
-
-std_msgs__msg__Float32MultiArray power_thrusters_current_msg;
-
-Publisher power_batteries_voltage_publisher = micro_ros.createPublisher(
-    "/power/batteries/voltage",
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray));
-
-std_msgs__msg__Float32MultiArray power_batteries_voltage_msg;
-
-Publisher power_board_temprature_publisher = micro_ros.createPublisher(
-    "/power/board/temperature",
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32));
-
-std_msgs__msg__Float32 power_board_temperature_msg;
-
-Publisher power_teensy_temprature_publisher = micro_ros.createPublisher(
-    "/power/teensy/temperature",
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32));
-
-std_msgs__msg__Float32 power_teensy_temperature_msg;
-
-TMP36 temperatureSensor(23, 3.3);
-ADCSensors adcSensors;
 
 void power_setup() {
     pinMode(LED_PIN, OUTPUT);
@@ -65,43 +47,64 @@ void power_setup() {
 
     // init all messages
     power_board_temperature_msg.data = 0.0;
-
     power_teensy_temperature_msg.data = 0.0;
-
     power_thrusters_current_msg.data.data = (float *)malloc(8 * sizeof(float));
-    propulsion_microseconds_msg.data.size = 8;
-    propulsion_microseconds_msg.data.capacity = 8;
-
     power_batteries_voltage_msg.data.data = (float *)malloc(2 * sizeof(float));
-    power_batteries_voltage_msg.data.size = 2;
-    power_batteries_voltage_msg.data.capacity = 2;
-
     propulsion_microseconds_msg.data.data = (int16_t *)malloc(8 * sizeof(int16_t));
+
+    power_thrusters_current_msg.data.size = 8;
+    power_batteries_voltage_msg.data.size = 2;
     propulsion_microseconds_msg.data.size = 8;
-    propulsion_microseconds_msg.data.capacity = 8;
 
     temperatureSensor.begin();
     adcSensors.begin(true, true, &Wire1);
+
+    // Create subscribers and publishers using the MicroROSWrapper class
+    propulsion_microseconds_subscriber = micro_ros.createSubscriber(
+        "/propulsion/microseconds",
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
+        propulsion_microseconds_callback
+    );
+
+    power_thrusters_current_publisher = micro_ros.createPublisher(
+        "/power/thrusters/current",
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray)
+    );
+
+    power_batteries_voltage_publisher = micro_ros.createPublisher(
+        "/power/batteries/voltage",
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray)
+    );
+
+    power_board_temprature_publisher = micro_ros.createPublisher(
+        "/power/board/temperature",
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32)
+    );
+
+    power_teensy_temprature_publisher = micro_ros.createPublisher(
+        "/power/teensy/temperature",
+        ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32)
+    );
 }
 
 void power_loop() {
     power_board_temperature_msg.data = temperatureSensor.readTemperature();
-    power_board_temprature_publisher.publish(&power_board_temperature_msg);
+    micro_ros.publishData(&power_board_temperature_msg, *power_board_temprature_publisher);  // Dereference pointer
 
     power_teensy_temperature_msg.data = tempmonGetTemp();
-    power_teensy_temprature_publisher.publish(&power_teensy_temperature_msg);
+    micro_ros.publishData(&power_teensy_temperature_msg, *power_teensy_temprature_publisher);  // Dereference pointer
 
     float* current_data = adcSensors.senseCurrent();
     for (size_t i = 0; i < 8; i++) {
         power_thrusters_current_msg.data.data[i] = current_data[i];
     }
-    power_thrusters_current_publisher.publish(&power_thrusters_current_msg);
+    micro_ros.publishData(&power_thrusters_current_msg, *power_thrusters_current_publisher);  // Dereference pointer
 
     float* voltage_data = adcSensors.senseVoltage();
     for (size_t i = 0; i < 2; i++) {
         power_batteries_voltage_msg.data.data[i] = voltage_data[i];
     }
-    power_batteries_voltage_publisher.publish(&power_batteries_voltage_msg);
+    micro_ros.publishData(&power_batteries_voltage_msg, *power_batteries_voltage_publisher);  // Dereference pointer
 
     updateThrusters(microseconds);
 
