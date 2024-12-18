@@ -13,7 +13,7 @@
 
 #define LED_PIN 13
 
-MicroROSWrapper micro_ros("power_node");
+MicroROSWrapper micro_ros;
 
 // Define the subscribers and publishers as rcl_publisher_t and rcl_subscription_t
 rcl_subscription_t* propulsion_microseconds_subscriber;
@@ -39,27 +39,8 @@ void propulsion_microseconds_callback(const void *msgin) {
     }
 }
 
-void power_setup() {
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, HIGH);
-    
-    initThrusters();
-
-    // init all messages
-    power_board_temperature_msg.data = 0.0;
-    power_teensy_temperature_msg.data = 0.0;
-    power_thrusters_current_msg.data.data = (float *)malloc(8 * sizeof(float));
-    power_batteries_voltage_msg.data.data = (float *)malloc(2 * sizeof(float));
-    propulsion_microseconds_msg.data.data = (int16_t *)malloc(8 * sizeof(int16_t));
-
-    power_thrusters_current_msg.data.size = 8;
-    power_batteries_voltage_msg.data.size = 2;
-    propulsion_microseconds_msg.data.size = 8;
-
-    temperatureSensor.begin();
-    adcSensors.begin(true, true, &Wire1);
-
-    // Create subscribers and publishers using the MicroROSWrapper class
+void createPublisherandSubscribers() {
+        // Create subscribers and publishers using the MicroROSWrapper class
     propulsion_microseconds_subscriber = micro_ros.createSubscriber(
         "/propulsion/microseconds",
         ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
@@ -87,7 +68,7 @@ void power_setup() {
     );
 }
 
-void power_loop() {
+void executeMicroROS() {
     power_board_temperature_msg.data = temperatureSensor.readTemperature();
     micro_ros.publishData(&power_board_temperature_msg, *power_board_temprature_publisher);  // Dereference pointer
 
@@ -105,8 +86,41 @@ void power_loop() {
         power_batteries_voltage_msg.data.data[i] = voltage_data[i];
     }
     micro_ros.publishData(&power_batteries_voltage_msg, *power_batteries_voltage_publisher);  // Dereference pointer
+}
 
+void power_setup() {
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, HIGH);
+    
+    initThrusters();
+
+    // init all messages
+    power_board_temperature_msg.data = 0.0;
+    power_teensy_temperature_msg.data = 0.0;
+    power_thrusters_current_msg.data.data = (float *)malloc(8 * sizeof(float));
+    power_batteries_voltage_msg.data.data = (float *)malloc(2 * sizeof(float));
+    propulsion_microseconds_msg.data.data = (int16_t *)malloc(8 * sizeof(int16_t));
+
+    power_thrusters_current_msg.data.size = 8;
+    power_batteries_voltage_msg.data.size = 2;
+    propulsion_microseconds_msg.data.size = 8;
+
+    temperatureSensor.begin();
+    adcSensors.begin(true, true, &Wire1);
+}
+
+void power_loop() {
+    micro_ros.handleStateMachine();
+
+    if (micro_ros.requestsOpen) {
+        createPublisherandSubscribers();
+        micro_ros.requestsOpen = false;
+    }
+
+    if (micro_ros.executionRequest) {
+        executeMicroROS();
+        micro_ros.executionRequest = false;
+    }
+    
     updateThrusters(microseconds);
-
-    micro_ros.spin();
 }

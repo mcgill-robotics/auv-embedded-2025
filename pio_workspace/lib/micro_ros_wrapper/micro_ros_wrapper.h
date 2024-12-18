@@ -13,18 +13,36 @@
 
 class MicroROSWrapper {
 public:
-    MicroROSWrapper(const char* node_name);
+    MicroROSWrapper();
     void spin();
     rcl_publisher_t* createPublisher(const char* topic_name, const rosidl_message_type_support_t* type_support);
     rcl_subscription_t* createSubscriber(const char* topic_name, const rosidl_message_type_support_t* type_support, void (*callback)(const void*));
-
     void publishData(const void* msg, rcl_publisher_t &publisher);
+
+    bool createEntities(char* node_name);
+    void destroyEntities();
+
+    enum States {
+        WAITING_AGENT,
+        AGENT_AVAILABLE,
+        AGENT_CONNECTED,
+        AGENT_DISCONNECTED
+    } state;
+
+    States current_state;
+
+    void handleStateMachine();
+
+    bool requestsOpen = false;
+    bool executionRequest = false;
 
 private:
     rclc_executor_t executor_;
     rclc_support_t support_;
     rcl_allocator_t allocator_;
     rcl_node_t node_;
+
+    char* node_name_;
 
     rcl_publisher_t publishers_[50];
     rcl_subscription_t subscriptions_[50];
