@@ -38,28 +38,27 @@ bool ADCSensors::begin(bool enableVoltage, bool enableCurrent, TwoWire* wire) {
 float* ADCSensors::senseVoltage() {
   if (voltageEnabled) {
     refreshVoltage();
-
     voltageValues[0] = convertVoltage(computedADCVoltage[0]);
     voltageValues[1] = convertVoltage(computedADCVoltage[1]);
-
-    return voltageValues;
   } else {
-    return nullptr;
+    voltageValues[0] = -1.0;
+    voltageValues[1] = -1.0;
   }
+  return voltageValues;
 }
 
 float* ADCSensors::senseCurrent() {
   if (currentEnabled) {
     refreshCurrent();
-
     for (int i = 0; i < 8; i++) {
       currentValues[i] = convertCurrent(computedADCCurrent[i]);
     }
-
-    return currentValues;
   } else {
-    return nullptr;
+    for (int i = 0; i < 8; i++) {
+      currentValues[i] = -1.0;
+    }
   }
+  return currentValues;
 }
 
 void ADCSensors::refreshVoltage() {
