@@ -72,7 +72,7 @@ bool create_entities() {
   return true;
 }
 
-void publishAndSubscribe() {
+void computeAndPublish() {
   power_board_temperature_msg.data = temperatureSensor.readTemperature();
   micro_ros.publishData(&power_board_temperature_msg, *power_board_temperature_publisher);  // Dereference pointer
 
@@ -117,7 +117,7 @@ void power_setup() {
 
 void power_loop() {
   if (micro_ros.pingAgent()) {
-    publishAndSubscribe();
+    computeAndPublish();
     micro_ros.spin();
     updateThrusters(microseconds);
 
@@ -125,9 +125,10 @@ void power_loop() {
     updateThrusters(offCommand);
     micro_ros.destroyMicroROS();
     
-    while (micro_ros.pingAgent()) {
+    while (!micro_ros.pingAgent()) {
 
     }
+    delay(10);
     create_entities();
   }
   
