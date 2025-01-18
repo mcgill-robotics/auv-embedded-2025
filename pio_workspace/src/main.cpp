@@ -6,6 +6,8 @@
 #include "display_main.h"
 #elif POWER_H
 #include "power_main.h"
+#elif POWER_ROS1_H
+#include "power_ros1_main.h"
 #endif
 
 void setup() {
@@ -15,6 +17,8 @@ void setup() {
     display_setup();
   #elif POWER_H
     power_setup();
+  #elif POWER_ROS1_H
+    power_ros1_setup();
   #endif
 }
 
@@ -25,5 +29,7 @@ void loop() {
     display_loop();
   #elif POWER_H
     power_loop();
+  #elif POWER_ROS1_H
+    power_ros1_loop();
   #endif
 }

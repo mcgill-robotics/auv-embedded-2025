@@ -1,3 +1,5 @@
+#ifdef DISPLAY_H
+
 #include "display_main.h"
 
 void display_setup(){
@@ -7,3 +9,5 @@ void display_setup(){
 void display_loop(){
     // put your main code here, to run repeatedly:
 }
+
+#endif

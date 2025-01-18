@@ -1,3 +1,5 @@
+#ifdef POWER_H
+
 #include "ThrusterControl.h"
 
 // Initialize thrusters
@@ -29,3 +31,5 @@ void updateThrusters(const int16_t microseconds[8]) {
         thrusters[i].writeMicroseconds(microseconds[i]);
     }
 }
+
+#endif
