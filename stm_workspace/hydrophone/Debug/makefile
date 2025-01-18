@@ -9,10 +9,13 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/portable/MemMang/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/subdir.mk
+-include Middlewares/Third_Party/FreeRTOS/Source/subdir.mk
 -include Drivers/STM32L4xx_HAL_Driver/Src/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
--include Core/Inc/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -79,14 +82,15 @@ hydrophone.list \
 
 
 # All Target
-all: main-build
+all:
+	+@$(MAKE) --no-print-directory pre-build && $(MAKE) --no-print-directory main-build
 
 # Main-build Target
 main-build: hydrophone.elf secondary-outputs
 
 # Tool invocations
 hydrophone.elf hydrophone.map: $(OBJS) $(USER_OBJS) /home/coldstuff1/auv/auv-embedded-2024/stm_workspace/hydrophone/STM32L433RCTXP_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-g++ -o "hydrophone.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/coldstuff1/auv/auv-embedded-2024/stm_workspace/hydrophone/STM32L433RCTXP_FLASH.ld" -Wl,-Map="hydrophone.map" -Wl,--gc-sections -static -L"/home/coldstuff1/auv/auv-embedded-2024/stm_workspace/hydrophone/Core/Lib" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
+	arm-none-eabi-g++ -o "hydrophone.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/home/coldstuff1/auv/auv-embedded-2024/stm_workspace/hydrophone/STM32L433RCTXP_FLASH.ld" --specs=nosys.specs -Wl,-Map="hydrophone.map" -Wl,--gc-sections -static -L"/home/coldstuff1/auv/auv-embedded-2024/stm_workspace/hydrophone/Core/Lib" -L"${workspace_loc:/hydrophone/micro_ros_stm32cubemx_utils/microros_static_library_ide/libmicroros" --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -lstdc++ -lsupc++ -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -105,6 +109,10 @@ clean:
 	-$(RM) default.size.stdout hydrophone.elf hydrophone.list hydrophone.map
 	-@echo ' '
 
+pre-build:
+	docker pull microros/micro_ros_static_library_builder:jazzy && docker run --rm -v /home/coldstuff1/auv/auv-embedded-2024/stm_workspace/hydrophone:/project --env MICROROS_LIBRARY_FOLDER=micro_ros_stm32cubemx_utils/microros_static_library_ide microros/micro_ros_static_library_builder:jazzy
+	-@echo ' '
+
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
 
 fail-specified-linker-script-missing:
@@ -114,6 +122,6 @@ fail-specified-linker-script-missing:
 warn-no-linker-script-specified:
 	@echo 'Warning: No linker script specified. Check the linker settings in the build configuration.'
 
-.PHONY: all clean dependents main-build fail-specified-linker-script-missing warn-no-linker-script-specified
+.PHONY: all clean dependents main-build fail-specified-linker-script-missing warn-no-linker-script-specified pre-build
 
 -include ../makefile.targets

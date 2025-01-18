@@ -5,5 +5,5 @@
 
 USER_OBJS :=
 
-LIBS := -larm_cortexM4lf_math
+LIBS := -larm_cortexM4lf_math -lmicroros
 

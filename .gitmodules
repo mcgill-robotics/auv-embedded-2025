@@ -1,0 +1,3 @@
+[submodule "stm_workspace/hydrophone/micro_ros_stm32cubemx_utils"]
+	path = stm_workspace/hydrophone/micro_ros_stm32cubemx_utils
+	url = ./stm_workspace/hydrophone/micro_ros_stm32cubemx_utils

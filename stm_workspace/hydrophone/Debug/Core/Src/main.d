@@ -1,4 +1,4 @@
-Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
+Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h \
@@ -32,17 +32,24 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
  ../Core/Inc/arm_math.h ../Drivers/CMSIS/Include/cmsis_compiler.h \
  ../Core/Inc/arm_common_tables.h ../Core/Inc/arm_const_structs.h \
- ../Core/Inc/ping.h ../Core/Inc/ros.h ../Core/Inc/ros/node_handle.h \
- ../Core/Inc/std_msgs/Time.h ../Core/Inc/ros/msg.h ../Core/Inc/ros/time.h \
- ../Core/Inc/ros/duration.h ../Core/Inc/rosserial_msgs/TopicInfo.h \
- ../Core/Inc/rosserial_msgs/Log.h \
- ../Core/Inc/rosserial_msgs/RequestParam.h ../Core/Inc/ros/publisher.h \
- ../Core/Inc/ros/node_handle.h ../Core/Inc/ros/subscriber.h \
- ../Core/Inc/ros/service_server.h ../Core/Inc/ros/service_client.h \
- ../Core/Inc/STM32Hardware.h ../Core/Inc/auv_msgs/PingerTimeDifference.h \
- ../Core/Inc/std_msgs/Float32MultiArray.h \
- ../Core/Inc/std_msgs/MultiArrayLayout.h \
- ../Core/Inc/std_msgs/MultiArrayDimension.h
+ ../Core/Inc/ping.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h \
+ ../Core/Inc/FreeRTOSConfig.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h \
+ ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h
 ../Core/Inc/main.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
@@ -80,22 +87,20 @@ Core/Src/main.o: ../Core/Src/main.cpp ../Core/Inc/main.h \
 ../Core/Inc/arm_common_tables.h:
 ../Core/Inc/arm_const_structs.h:
 ../Core/Inc/ping.h:
-../Core/Inc/ros.h:
-../Core/Inc/ros/node_handle.h:
-../Core/Inc/std_msgs/Time.h:
-../Core/Inc/ros/msg.h:
-../Core/Inc/ros/time.h:
-../Core/Inc/ros/duration.h:
-../Core/Inc/rosserial_msgs/TopicInfo.h:
-../Core/Inc/rosserial_msgs/Log.h:
-../Core/Inc/rosserial_msgs/RequestParam.h:
-../Core/Inc/ros/publisher.h:
-../Core/Inc/ros/node_handle.h:
-../Core/Inc/ros/subscriber.h:
-../Core/Inc/ros/service_server.h:
-../Core/Inc/ros/service_client.h:
-../Core/Inc/STM32Hardware.h:
-../Core/Inc/auv_msgs/PingerTimeDifference.h:
-../Core/Inc/std_msgs/Float32MultiArray.h:
-../Core/Inc/std_msgs/MultiArrayLayout.h:
-../Core/Inc/std_msgs/MultiArrayDimension.h:
+../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS/cmsis_os.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h:
+../Core/Inc/FreeRTOSConfig.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h:
+../Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F/portmacro.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/list.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/task.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h:
+../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h:
