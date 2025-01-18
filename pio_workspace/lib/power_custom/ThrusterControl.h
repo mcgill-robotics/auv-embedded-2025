@@ -1,3 +1,5 @@
+#ifdef POWER_H
+
 #ifndef THRUSTER_CONTROL_H
 #define THRUSTER_CONTROL_H
 
@@ -26,5 +28,7 @@ void initThrusters();
 
 // Updates the thrusters' PWM signal
 void updateThrusters(const int16_t microseconds[8]);
+
+#endif
 
 #endif

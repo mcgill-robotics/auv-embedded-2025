@@ -1,3 +1,5 @@
+#ifdef POWER_H
+
 #include "power_main.h"
 
 #include <Arduino.h>
@@ -134,3 +136,5 @@ void power_loop() {
   
   delay(10);
 }
+
+#endif
