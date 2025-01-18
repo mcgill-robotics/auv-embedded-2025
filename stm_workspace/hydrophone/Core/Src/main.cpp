@@ -22,7 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <ros.h>
-#include <auv_msgs/PingerTimeDifference.h>.h>
+#include <auv_msgs/PingerTimeDifference.h>
+#include <std_msgs/Float32MultiArray.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,8 +53,26 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 /* USER CODE BEGIN PV */
 ros::NodeHandle nh;
-auv_msgs::PingerTimeDifference hmsg;
-ros::Publisher hpub("/sensors/hydrophones/pinger_time_difference", &hmsg);
+auv_msgs::PingerTimeDifference pingerTimeDifference;
+std_msgs::Float32MultiArray wave0;
+std_msgs::Float32MultiArray wave1;
+std_msgs::Float32MultiArray wave2;
+std_msgs::Float32MultiArray fourier0;
+std_msgs::Float32MultiArray fourier1;
+std_msgs::Float32MultiArray fourier2;
+
+
+
+
+ros::Publisher hpub("/sensors/hydrophones/pinger_time_difference", &pingerTimeDifference);
+ros::Publisher wave_pub0("/sensors/hydrophones/wave0", &wave0);
+//ros::Publisher wave_pub1("/sensors/hydrophones/wave1", &wave1);
+//ros::Publisher wave_pub2("/sensors/hydrophones/wave2", &wave2);
+ros::Publisher fourier_pub0("/sensors/hydrophones/fourier0", &fourier0);
+//ros::Publisher fourier_pub1("/sensors/hydrophones/fourier1", &fourier1);
+//ros::Publisher fourier_pub2("/sensors/hydrophones/fourier2", &fourier2);
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -150,6 +169,9 @@ int main(void)
   float32_t hydrophone1[1024];
   float32_t hydrophone2[1024];
   float32_t hydrophone3[1024];
+  float32_t fourier_wave0[512];
+  float32_t fourier_wave1[512];
+  float32_t fourier_wave2[512];
   float32_t V1, V2, V3;
   float32_t v1Variance;
   float32_t v1Sum = 0;
@@ -173,6 +195,12 @@ int main(void)
   }
   nh.initNode();
   nh.advertise(hpub);
+  nh.advertise(wave_pub0);
+  //nh.advertise(wave_pub1);
+  //nh.advertise(wave_pub2);
+  nh.advertise(fourier_pub0);
+  //nh.advertise(fourier_pub1);
+  //nh.advertise(fourier_pub2);
   HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
@@ -196,46 +224,58 @@ int main(void)
       		break;
       	case HYDROPHONE1:
       		calculateVoltage(adcChannels[0], adcChannels[1], &V1);
-      		v1Sum += V1;
-      		v1SumSquares += powf(V1, 2);
       		hydrophone1[2*index] = V1;
       		break;
         case HYDROPHONE2:
         	calculateVoltage(adcChannels[0], adcChannels[2], &V2);
-      		v2Sum += V2;
-      		v2SumSquares += powf(V2, 2);
         	hydrophone2[2*index] = V2;
         	break;
         case HYDROPHONE3:
         	calculateVoltage(adcChannels[0], adcChannels[3], &V3);
         	hydrophone3[2*index] = V3;
-      		v3Sum += V3;
-      		v3SumSquares += powf(V3, 2);
         	break;
       }
       if (i % 3 == 2) {
     	  index++;
       }
 	 }
-    calculateVariance(&v1Sum, &v1SumSquares, &v1Variance);
-    calculateVariance(&v2Sum, &v2SumSquares, &v2Variance);
-    calculateVariance(&v3Sum, &v3SumSquares, &v3Variance);
+	wave0.data = hydrophone1;
+	wave0.data_length = 1024;
+	wave_pub0.publish(&wave0);
+	nh.spinOnce();
+	/*wave1.data = hydrophone2;
+	wave1.data_length = 1024;
+	wave_pub1.publish(&wave1);
+	nh.spinOnce();
+	wave2.data = hydrophone3;
+	wave2.data_length = 1024;
+	wave_pub2.publish(&wave2);
+	nh.spinOnce();*/
+	get_fft(hydrophone1, fourier_wave0, 1024);
+	fourier0.data = fourier_wave0;
+	fourier0.data_length = 512;
+	fourier_pub0.publish(&fourier0);
+	nh.spinOnce();
+	/*get_fft(hydrophone2, fourier_wave1, 1024);
+	fourier1.data = fourier_wave1;
+	fourier1.data_length = 512;
+	fourier_pub1.publish(&fourier1);
+	nh.spinOnce();
+	get_fft(hydrophone3, fourier_wave2, 1024);
+	fourier2.data = fourier_wave2;
+	fourier2.data_length = 512;
+	fourier_pub2.publish(&fourier2);
+	nh.spinOnce();*/
     frequency0 = get_frequency(hydrophone1, 1024, 4705882.3529);
     frequency1 = get_frequency(hydrophone2, 1024, 4705882.3529);
     frequency2 = get_frequency(hydrophone3, 1024, 4705882.3529);
-    v1Sum = 0;
-    v1SumSquares = 0;
-	v2Sum = 0;
-	v2SumSquares = 0;
-	v3Sum = 0;
-	v3SumSquares = 0;
     if (frequency0 == frequency1 && frequency0 == frequency2) {
-		hmsg.frequency = frequency0;
-		hmsg.times = times;
-		hmsg.times_length = 3;
-		hpub.publish(&hmsg);
+		pingerTimeDifference.frequency = frequency0;
+		pingerTimeDifference.times = times;
+		pingerTimeDifference.times_length = 3;
+		hpub.publish(&pingerTimeDifference);
     }
-	  nh.spinOnce();
+	nh.spinOnce();
 
     /* USER CODE END WHILE */
 

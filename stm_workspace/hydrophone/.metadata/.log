@@ -1,0 +1,15 @@
+!SESSION 2024-11-02 13:42:35.158 -----------------------------------------------
+eclipse.buildId=Version 1.16.1
+java.version=17.0.11
+java.vendor=Eclipse Adoptium
+BootLoader constants: OS=linux, ARCH=x86_64, WS=gtk, NL=en_US
+Command-line arguments:  -os linux -ws gtk -arch x86_64
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 4 4 2024-11-02 13:46:51.212
+!MESSAGE CubeMX plugin appears to be active, Log4j initialization might be too late.
+
+!ENTRY com.st.stm32cube.ide.mcu.informationcenter 1 1 2024-11-02 13:46:51.212
+!MESSAGE Log4j2 initialized with config file /home/coldstuff1/auv/auv-embedded-2024/stm_workspace/hydrophone/.metadata/.log4j2.xml
+
+!ENTRY com.st.stm32cube.ide.mcu.ide 1 1 2024-11-02 13:46:55.327
+!MESSAGE Started RMI Server, listening on port 41337

@@ -35,17 +35,10 @@ float32_t fft(float32_t* buff, uint32_t size, uint32_t target, float32_t fs)
 uint32_t get_frequency(float32_t* buff, uint32_t size, float32_t fs)
 {
     uint32_t target_frequencies[] = {25000, 30000, 35000, 40000};
-    float32_t temp_buff[size];
 
-    for (int i = 0; i < size; i++)
-    {
-        temp_buff[i] = buff[i];
-    }
-
-    arm_cfft_f32(&instance, temp_buff, 0, 0);
 
     float32_t freq[size / 2];
-    arm_cmplx_mag_f32(temp_buff, freq, size / 2);
+    get_fft(buff, freq, size);
 
     uint32_t max = 0;
     uint32_t frequency = 0;
@@ -60,6 +53,17 @@ uint32_t get_frequency(float32_t* buff, uint32_t size, float32_t fs)
     }
 
     return frequency;
+}
+
+void get_fft(float32_t* inWave, float32_t* outWave, uint32_t size) {
+		float32_t temp_buff[size];
+
+	    for (int i = 0; i < size; i++)
+	    {
+	        temp_buff[i] = inWave[i];
+	    }
+		arm_cfft_f32(&instance, temp_buff, 0, 0);
+	    arm_cmplx_mag_f32(temp_buff, outWave, size / 2);
 }
 
 uint32_t get_total_power(uint32_t* buff, uint32_t size)

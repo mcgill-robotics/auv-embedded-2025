@@ -33,5 +33,6 @@ uint8_t has_ping(float32_t* buff, uint32_t size, uint32_t threshold);
 uint32_t get_power_at_target_frequency(uint32_t* buff, uint32_t size);
 uint32_t get_total_power(uint32_t* buff, uint32_t size);
 uint32_t get_frequency(float32_t* buff, uint32_t size, float32_t fs);
+void get_fft(float32_t* inWave, float32_t* outWave, uint32_t size);
 
 #endif /* INC_PING_H_ */
