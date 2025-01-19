@@ -453,11 +453,15 @@ rcl_timer_t timer;
   if (uxr_millis() - init > MS) { X; init = uxr_millis();} \
 } while (0)\
 
-// Error handle loop
 void error_loop() {
-  while(1) {
-    delay(100);
-  }
+    int error = 0;
+    while (error < 10) {
+        digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+        delay(100);
+
+        error++;
+    }
+    digitalWrite(LED_BUILTIN, HIGH);
 }
 
 enum states {
@@ -562,6 +566,7 @@ void reConnectUSB() {
 
 void destroy_entities()
 {
+  digitalWrite(9, HIGH);
   reConnectUSB();
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
@@ -573,6 +578,7 @@ void destroy_entities()
   rclc_executor_fini(&executor);
   rcl_node_fini(&node);
   rclc_support_fini(&support);
+  digitalWrite(9, LOW);
 }
 
 void power_setup() {
