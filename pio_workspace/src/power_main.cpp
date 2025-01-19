@@ -558,16 +558,19 @@ bool create_entities()
   return true;
 }
 
-void reConnectUSB() {
-    USB1_USBCMD = 0; // disconnect USB
-    delay(50);       // enough time for USB hubs/ports to detect disconnect
-    USB1_USBCMD = 1;
+void disconnectUSB() {
+  USB1_USBCMD = 0;
+}
+void connectUSB() {
+  USB1_USBCMD = 1;
 }
 
 void destroy_entities()
 {
+  disconnectUSB();
+  delay(25);
   digitalWrite(9, HIGH);
-  reConnectUSB();
+
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
@@ -578,7 +581,10 @@ void destroy_entities()
   rclc_executor_fini(&executor);
   rcl_node_fini(&node);
   rclc_support_fini(&support);
+
+  delay(25);
   digitalWrite(9, LOW);
+  connectUSB();
 }
 
 void power_setup() {
