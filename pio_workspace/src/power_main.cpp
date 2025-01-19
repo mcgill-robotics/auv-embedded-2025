@@ -420,6 +420,8 @@ void power_loop() {
 
 #include <std_msgs/msg/int32.h>
 #include <std_msgs/msg/int16_multi_array.h>
+#include <std_msgs/msg/float32.h>
+#include <std_msgs/msg/float32_multi_array.h>
 
 #if !defined(MICRO_ROS_TRANSPORT_ARDUINO_SERIAL)
 #error This example is only avaliable for Arduino framework with serial transport.
@@ -429,14 +431,20 @@ void power_loop() {
 
 bool micro_ros_init_successful;
 
-rcl_subscription_t array_subscriber;
-std_msgs__msg__Int16MultiArray array_msg_subscription;
+rcl_subscription_t propulsion_microseconds_subscriber;
+std_msgs__msg__Int16MultiArray propulsion_microseconds_msg;
 
-rcl_publisher_t publisher;
-std_msgs__msg__Int32 msg;
+rcl_publisher_t power_batteries_voltage_publisher;
+std_msgs__msg__Float32MultiArray power_batteries_voltage_msg;
 
-rcl_publisher_t array_publisher;
-std_msgs__msg__Int16MultiArray array_msg_publishing;
+rcl_publisher_t power_thrusters_current_publisher;
+std_msgs__msg__Float32MultiArray power_thrusters_current_msg;
+
+rcl_publisher_t power_board_temperature_publisher;
+std_msgs__msg__Float32 power_board_temperature_msg;
+
+rcl_publisher_t power_teensy_temperature_publisher;
+std_msgs__msg__Float32 power_teensy_temperature_msg;
 
 rclc_executor_t executor;
 rclc_support_t support;
@@ -471,13 +479,7 @@ enum states {
   AGENT_DISCONNECTED
 } state;
 
-void subscription_callback(const void * msgin)
-{  
-  const std_msgs__msg__Int32 * msg = (const std_msgs__msg__Int32 *)msgin;
-  digitalWrite(LED_PIN, (msg->data == 0) ? LOW : HIGH);  
-}
-
-void array_subscription_callback(const void * msgin)
+void propulsion_microseconds_callback(const void * msgin)
 {  
   const std_msgs__msg__Int16MultiArray * msg = (const std_msgs__msg__Int16MultiArray *)msgin;
 
@@ -496,18 +498,12 @@ void array_subscription_callback(const void * msgin)
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
-    RCSOFTCHECK(rcl_publish(&publisher, &msg, NULL));
-    RCSOFTCHECK(rcl_publish(&array_publisher, &array_msg_publishing, NULL));
-    msg.data++;
+    RCSOFTCHECK(rcl_publish(&power_batteries_voltage_publisher, &power_batteries_voltage_publisher, NULL));
+    RCSOFTCHECK(rcl_publish(&power_thrusters_current_publisher, &power_thrusters_current_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&power_board_temperature_publisher, &power_board_temperature_msg, NULL));
+    RCSOFTCHECK(rcl_publish(&power_teensy_temperature_publisher, &power_teensy_temperature_msg, NULL));
 
-    array_msg_publishing.data.data[0]++;
-    array_msg_publishing.data.data[1]++;
-    array_msg_publishing.data.data[2]++;
-    array_msg_publishing.data.data[3]++;
-    array_msg_publishing.data.data[4]++;
-    array_msg_publishing.data.data[5]++;
-    array_msg_publishing.data.data[6]++;
-    array_msg_publishing.data.data[7]++;
+    // can add logic to messages here
   }
 }
 
@@ -519,29 +515,41 @@ bool create_entities()
   RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
 
   // create node
-  RCCHECK(rclc_node_init_default(&node, "int32_publisher_rclc", "", &support));
+  RCCHECK(rclc_node_init_default(&node, "power_node", "", &support));
+
+  RCCHECK(rclc_subscription_init_default(
+    &propulsion_microseconds_subscriber,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
+    "/propulsion/microseconds"));
 
   /// create publisher
   RCCHECK(rclc_publisher_init_default(
-    &publisher,
+    &power_batteries_voltage_publisher,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int32),
-    "micro_ros_platformio_node_publisher"));
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+    "/power/batteries/voltage"));
 
   RCCHECK(rclc_publisher_init_default(
-    &array_publisher,
+    &power_thrusters_current_publisher,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
-    "array_publisher"));
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32MultiArray),
+    "/power/thrusters/current"));
+  
+  RCCHECK(rclc_publisher_init_default(
+    &power_board_temperature_publisher,
+    &node,
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
+    "/power/board/temperature"));
 
-  RCCHECK(rclc_subscription_init_default(
-    &array_subscriber,
+  RCCHECK(rclc_publisher_init_default(
+    &power_teensy_temperature_publisher,
     &node,
-    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Int16MultiArray),
-    "array_subscriber"));
+    ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, Float32),
+    "/power/teensy/temperature"));
 
   // create timer,
-  const unsigned int timer_timeout = 1000;
+  const unsigned int timer_timeout = 100;
   RCCHECK(rclc_timer_init_default(
     &timer,
     &support,
@@ -550,9 +558,9 @@ bool create_entities()
 
   // create executor
   executor = rclc_executor_get_zero_initialized_executor();
-  RCCHECK(rclc_executor_init(&executor, &support.context, 10, &allocator)); // number arbitrarily set, idk what is the correct on yet, trial and error later on
+  RCCHECK(rclc_executor_init(&executor, &support.context, 100, &allocator)); // number arbitrarily set, idk what is the correct on yet, trial and error later on
   RCCHECK(rclc_executor_add_timer(&executor, &timer));
-  RCCHECK(rclc_executor_add_subscription(&executor, &array_subscriber, &array_msg_subscription, &array_subscription_callback, ON_NEW_DATA));
+  RCCHECK(rclc_executor_add_subscription(&executor, &propulsion_microseconds_subscriber, &propulsion_microseconds_msg, &propulsion_microseconds_callback, ON_NEW_DATA));
 
 
   return true;
@@ -574,9 +582,11 @@ void destroy_entities()
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
-  rcl_publisher_fini(&publisher, &node);
-  rcl_publisher_fini(&array_publisher, &node);
-  rcl_subscription_fini(&array_subscriber, &node);
+  rcl_publisher_fini(&power_batteries_voltage_publisher, &node);
+  rcl_publisher_fini(&power_thrusters_current_publisher, &node);
+  rcl_publisher_fini(&power_board_temperature_publisher, &node);
+  rcl_publisher_fini(&power_teensy_temperature_publisher, &node);
+  rcl_subscription_fini(&propulsion_microseconds_subscriber, &node);
   rcl_timer_fini(&timer);
   rclc_executor_fini(&executor);
   rcl_node_fini(&node);
@@ -605,25 +615,19 @@ void power_setup() {
   set_microros_serial_transports(Serial);
   delay(2000);
 
-  array_msg_publishing.data.size = 8;
-  array_msg_publishing.data.capacity = 8;
-  array_msg_publishing.data.data = (int16_t*)malloc(array_msg_publishing.data.capacity * sizeof(int16_t));
+  propulsion_microseconds_msg.data.size = 8;
+  propulsion_microseconds_msg.data.capacity = 8;
+  propulsion_microseconds_msg.data.data = (int16_t*)malloc(propulsion_microseconds_msg.data.capacity * sizeof(int16_t));
 
-  array_msg_subscription.data.size = 8;
-  array_msg_subscription.data.capacity = 8;
-  array_msg_subscription.data.data = (int16_t*)malloc(array_msg_subscription.data.capacity * sizeof(int16_t));
+  power_batteries_voltage_msg.data.size = 2;
+  power_batteries_voltage_msg.data.capacity = 2;
+  power_batteries_voltage_msg.data.data = (float*)malloc(power_batteries_voltage_msg.data.capacity * sizeof(float));
+
+  power_board_temperature_msg.data = 0.0;
+
+  power_teensy_temperature_msg.data = 0.0;
 
   state = WAITING_AGENT;
-
-  msg.data = 0;
-  array_msg_publishing.data.data[0] = 0;
-  array_msg_publishing.data.data[1] = 1;
-  array_msg_publishing.data.data[2] = 2;
-  array_msg_publishing.data.data[3] = 3;
-  array_msg_publishing.data.data[4] = 4;
-  array_msg_publishing.data.data[5] = 5;
-  array_msg_publishing.data.data[6] = 6;
-  array_msg_publishing.data.data[7] = 7;
 }
 
 void power_loop() {
