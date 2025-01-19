@@ -17,10 +17,6 @@
 #include <std_msgs/msg/float32.h>
 #include <std_msgs/msg/float32_multi_array.h>
 
-#if !defined(MICRO_ROS_TRANSPORT_ARDUINO_SERIAL)
-#error This example is only avaliable for Arduino framework with serial transport.
-#endif
-
 #define LED_PIN 13
 
 bool micro_ros_init_successful;
@@ -58,12 +54,11 @@ rcl_timer_t timer;
 void error_loop() {
     int error = 0;
     while (error < 10) {
-        digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+        digitalWrite(LED_PIN, !digitalRead(LED_PIN));
         delay(100);
-
         error++;
     }
-    digitalWrite(LED_BUILTIN, HIGH);
+    digitalWrite(LED_PIN, HIGH);
 }
 
 enum states {
@@ -85,6 +80,8 @@ void propulsion_microseconds_callback(const void * msgin)
   digitalWrite(7, msg->data.data[5] == 0 ? LOW : HIGH);
   digitalWrite(8, msg->data.data[6] == 0 ? LOW : HIGH);
   digitalWrite(9, msg->data.data[7] == 0 ? LOW : HIGH);
+
+  //logic can go here
 }
 
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
@@ -246,6 +243,7 @@ void power_setup() {
   power_board_temperature_msg.data = -2.0;
   power_teensy_temperature_msg.data = -2.0;
 
+  // first state
   state = WAITING_AGENT;
 }
 
@@ -267,12 +265,10 @@ void power_loop() {
       }
       break;
     case AGENT_DISCONNECTED:
-      delay(500);
       destroy_entities();
       state = WAITING_AGENT;
       break;
     default:
-      delay(200);
       break;
   }
 
