@@ -476,6 +476,8 @@ void subscription_callback(const void * msgin)
 void array_subscription_callback(const void * msgin)
 {  
   const std_msgs__msg__Int16MultiArray * msg = (const std_msgs__msg__Int16MultiArray *)msgin;
+
+  /*
   digitalWrite(2, msg->data.data[0] == 0 ? LOW : HIGH);
   digitalWrite(3, msg->data.data[1] == 0 ? LOW : HIGH);
   digitalWrite(4, msg->data.data[2] == 0 ? LOW : HIGH);
@@ -484,7 +486,7 @@ void array_subscription_callback(const void * msgin)
   digitalWrite(7, msg->data.data[5] == 0 ? LOW : HIGH);
   digitalWrite(8, msg->data.data[6] == 0 ? LOW : HIGH);
   digitalWrite(9, msg->data.data[7] == 0 ? LOW : HIGH);
-
+  */
 }
 
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
@@ -552,12 +554,21 @@ bool create_entities()
   return true;
 }
 
+void reConnectUSB() {
+    USB1_USBCMD = 0; // disconnect USB
+    delay(50);       // enough time for USB hubs/ports to detect disconnect
+    USB1_USBCMD = 1;
+}
+
 void destroy_entities()
 {
+  reConnectUSB();
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
 
   rcl_publisher_fini(&publisher, &node);
+  rcl_publisher_fini(&array_publisher, &node);
+  rcl_subscription_fini(&array_subscriber, &node);
   rcl_timer_fini(&timer);
   rclc_executor_fini(&executor);
   rcl_node_fini(&node);
@@ -606,25 +617,49 @@ void power_setup() {
 void power_loop() {
   switch (state) {
     case WAITING_AGENT:
+      digitalWrite(2, HIGH);
+      digitalWrite(3, LOW);
+      digitalWrite(4, LOW);
+      digitalWrite(5, LOW);
       EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
+      digitalWrite(8, HIGH);
+      delay(200);
+      digitalWrite(8, LOW);
       break;
     case AGENT_AVAILABLE:
+      digitalWrite(2, LOW);
+      digitalWrite(3, HIGH);
+      digitalWrite(4, LOW);
+      digitalWrite(5, LOW);
+      delay(200);
       state = (true == create_entities()) ? AGENT_CONNECTED : WAITING_AGENT;
       if (state == WAITING_AGENT) {
         destroy_entities();
       };
       break;
     case AGENT_CONNECTED:
+      digitalWrite(2, LOW);
+      digitalWrite(3, LOW);
+      digitalWrite(4, HIGH);
+      digitalWrite(5, LOW);
+      delay(200);
       EXECUTE_EVERY_N_MS(200, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_CONNECTED : AGENT_DISCONNECTED;);
       if (state == AGENT_CONNECTED) {
         rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
       }
       break;
     case AGENT_DISCONNECTED:
+      digitalWrite(2, LOW);
+      digitalWrite(3, LOW);
+      digitalWrite(4, LOW);
+      digitalWrite(5, HIGH);
+      delay(500);
       destroy_entities();
       state = WAITING_AGENT;
       break;
     default:
+      digitalWrite(6, HIGH);
+      delay(200);
       break;
   }
 
