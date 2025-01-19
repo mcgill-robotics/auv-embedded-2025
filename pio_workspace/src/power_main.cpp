@@ -498,7 +498,7 @@ void propulsion_microseconds_callback(const void * msgin)
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
   RCLC_UNUSED(last_call_time);
   if (timer != NULL) {
-    RCSOFTCHECK(rcl_publish(&power_batteries_voltage_publisher, &power_batteries_voltage_publisher, NULL));
+    RCSOFTCHECK(rcl_publish(&power_batteries_voltage_publisher, &power_batteries_voltage_msg, NULL));
     RCSOFTCHECK(rcl_publish(&power_thrusters_current_publisher, &power_thrusters_current_msg, NULL));
     RCSOFTCHECK(rcl_publish(&power_board_temperature_publisher, &power_board_temperature_msg, NULL));
     RCSOFTCHECK(rcl_publish(&power_teensy_temperature_publisher, &power_teensy_temperature_msg, NULL));
@@ -549,7 +549,7 @@ bool create_entities()
     "/power/teensy/temperature"));
 
   // create timer,
-  const unsigned int timer_timeout = 100;
+  const unsigned int timer_timeout = 1000;
   RCCHECK(rclc_timer_init_default(
     &timer,
     &support,
@@ -615,17 +615,46 @@ void power_setup() {
   set_microros_serial_transports(Serial);
   delay(2000);
 
+  // allocates correct message sizes and initialzies to 0, required or crashes
+
   propulsion_microseconds_msg.data.size = 8;
   propulsion_microseconds_msg.data.capacity = 8;
   propulsion_microseconds_msg.data.data = (int16_t*)malloc(propulsion_microseconds_msg.data.capacity * sizeof(int16_t));
+  for (int i = 0; i < 8; i++) {
+    propulsion_microseconds_msg.data.data[i] = 0;
+  }
 
   power_batteries_voltage_msg.data.size = 2;
   power_batteries_voltage_msg.data.capacity = 2;
   power_batteries_voltage_msg.data.data = (float*)malloc(power_batteries_voltage_msg.data.capacity * sizeof(float));
+  for (int i = 0; i < 2; i++) {
+    power_batteries_voltage_msg.data.data[i] = 0.0;
+  }
+
+  power_thrusters_current_msg.data.size = 8;
+  power_thrusters_current_msg.data.capacity = 8;
+  power_thrusters_current_msg.data.data = (float*)malloc(power_thrusters_current_msg.data.capacity * sizeof(float));
+  for (int i = 0; i < 8; i++) {
+    power_thrusters_current_msg.data.data[i] = 0.0;
+  }
 
   power_board_temperature_msg.data = 0.0;
 
   power_teensy_temperature_msg.data = 0.0;
+
+  //allocates thrusters to 1500 in case of reset and allocates -2.0 to sensing to go under the -1.0 of unintiailized from drivers
+
+  for (int i = 0; i < 8; i++) {
+    propulsion_microseconds_msg.data.data[i] = 1500;
+  }
+  for (int i = 0; i < 2; i++) {
+    power_batteries_voltage_msg.data.data[i] = -2.0;
+  }
+  for (int i = 0; i < 8; i++) {
+    power_thrusters_current_msg.data.data[i] = -2.0;
+  }
+  power_board_temperature_msg.data = -2.0;
+  power_teensy_temperature_msg.data = -2.0;
 
   state = WAITING_AGENT;
 }
