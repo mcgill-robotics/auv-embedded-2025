@@ -3,6 +3,11 @@
 #include "power_main.h"
 
 #include <Arduino.h>
+
+#include "ThrusterControl.h"
+#include "adc_sensors.h"
+#include "TMP36.h"
+
 #include <micro_ros_arduino.h>
 
 #include <stdio.h>
@@ -12,12 +17,18 @@
 #include <rclc/executor.h>
 #include <rmw_microros/rmw_microros.h>
 
-#include <std_msgs/msg/int32.h>
 #include <std_msgs/msg/int16_multi_array.h>
 #include <std_msgs/msg/float32.h>
 #include <std_msgs/msg/float32_multi_array.h>
 
 #define LED_PIN 13
+
+
+#define ENABLE_VOLTAGE_SENSE false
+#define ENABLE_CURRENT_SENSE false
+
+ADCSensors adcSensors;
+TMP36 temperatureSensor(23, 3.3);
 
 bool micro_ros_init_successful;
 
@@ -72,16 +83,9 @@ void propulsion_microseconds_callback(const void * msgin)
 {  
   const std_msgs__msg__Int16MultiArray * msg = (const std_msgs__msg__Int16MultiArray *)msgin;
 
-  digitalWrite(2, msg->data.data[0] == 0 ? LOW : HIGH);
-  digitalWrite(3, msg->data.data[1] == 0 ? LOW : HIGH);
-  digitalWrite(4, msg->data.data[2] == 0 ? LOW : HIGH);
-  digitalWrite(5, msg->data.data[3] == 0 ? LOW : HIGH);
-  digitalWrite(6, msg->data.data[4] == 0 ? LOW : HIGH);
-  digitalWrite(7, msg->data.data[5] == 0 ? LOW : HIGH);
-  digitalWrite(8, msg->data.data[6] == 0 ? LOW : HIGH);
-  digitalWrite(9, msg->data.data[7] == 0 ? LOW : HIGH);
-
-  //logic can go here
+  for (int i = 0; i < 8; i++) {
+    microseconds[i] = msg->data.data[i];
+  }
 }
 
 void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
@@ -91,13 +95,10 @@ void timer_callback(rcl_timer_t * timer, int64_t last_call_time) {
     RCSOFTCHECK(rcl_publish(&power_thrusters_current_publisher, &power_thrusters_current_msg, NULL));
     RCSOFTCHECK(rcl_publish(&power_board_temperature_publisher, &power_board_temperature_msg, NULL));
     RCSOFTCHECK(rcl_publish(&power_teensy_temperature_publisher, &power_teensy_temperature_msg, NULL));
-
-    // can add logic to messages here
   }
 }
 
-bool create_entities()
-{
+bool create_entities() {
   allocator = rcl_get_default_allocator();
 
   // create init_options
@@ -162,10 +163,10 @@ void connectUSB() {
   USB1_USBCMD = 1;
 }
 
-void destroy_entities()
-{
+void destroy_entities() {
   disconnectUSB();
   delay(25);
+  updateThrusters(offCommand);
 
   rmw_context_t * rmw_context = rcl_context_get_rmw_context(&support.context);
   (void) rmw_uros_set_context_entity_destroy_session_timeout(rmw_context, 0);
@@ -184,18 +185,30 @@ void destroy_entities()
   connectUSB();
 }
 
-void power_setup() {
-  pinMode(13, OUTPUT);
-  digitalWrite(13, HIGH);
+void senseData() {
+  power_board_temperature_msg.data = temperatureSensor.readTemperature();
 
-  pinMode(2, OUTPUT);
-  pinMode(3, OUTPUT);
-  pinMode(4, OUTPUT);
-  pinMode(5, OUTPUT);
-  pinMode(6, OUTPUT);
-  pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);
+  power_teensy_temperature_msg.data = tempmonGetTemp();
+
+  float* current_data = adcSensors.senseCurrent();
+  for (size_t i = 0; i < 8; i++) {
+      power_thrusters_current_msg.data.data[i] = current_data[i];
+  }
+
+  float* voltage_data = adcSensors.senseVoltage();
+  for (size_t i = 0; i < 2; i++) {
+      power_batteries_voltage_msg.data.data[i] = voltage_data[i];
+  }
+}
+
+void power_setup() {
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, HIGH);
+
+  initThrusters();
+
+  adcSensors.begin(ENABLE_VOLTAGE_SENSE, ENABLE_CURRENT_SENSE, &Wire1);
+  temperatureSensor.begin();
 
   // Configure serial transport
   Serial.begin(115200);
@@ -248,6 +261,9 @@ void power_setup() {
 }
 
 void power_loop() {
+  senseData();
+  updateThrusters(microseconds);
+
   switch (state) {
     case WAITING_AGENT:
       EXECUTE_EVERY_N_MS(500, state = (RMW_RET_OK == rmw_uros_ping_agent(100, 1)) ? AGENT_AVAILABLE : WAITING_AGENT;);
