@@ -24,8 +24,8 @@
 #define LED_PIN 13
 
 
-#define ENABLE_VOLTAGE_SENSE false
-#define ENABLE_CURRENT_SENSE false
+#define ENABLE_VOLTAGE_SENSE true
+#define ENABLE_CURRENT_SENSE true
 
 ADCSensors adcSensors;
 TMP36 temperatureSensor(23, 3.3);
