@@ -2,7 +2,6 @@
 "./Core/Src/freertos.o"
 "./Core/Src/it_transport.o"
 "./Core/Src/main.o"
-"./Core/Src/mainpp.o"
 "./Core/Src/microros_allocators.o"
 "./Core/Src/microros_time.o"
 "./Core/Src/ping.o"

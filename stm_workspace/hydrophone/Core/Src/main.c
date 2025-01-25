@@ -6,7 +6,7 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2025 STMicroelectronics.
+  * Copyright (c) 2023 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -22,7 +22,6 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,6 +51,26 @@ DMA_HandleTypeDef hdma_usart2_tx;
 
 osThreadId defaultTaskHandle;
 /* USER CODE BEGIN PV */
+/*ros::NodeHandle nh;
+auv_msgs::PingerTimeDifference pingerTimeDifference;
+std_msgs::Float32MultiArray wave0;
+std_msgs::Float32MultiArray wave1;
+std_msgs::Float32MultiArray wave2;
+std_msgs::Float32MultiArray fourier0;
+std_msgs::Float32MultiArray fourier1;
+std_msgs::Float32MultiArray fourier2;
+
+
+
+
+ros::Publisher hpub("/sensors/hydrophones/pinger_time_difference", &pingerTimeDifference);
+ros::Publisher wave_pub0("/sensors/hydrophones/wave0", &wave0);
+//ros::Publisher wave_pub1("/sensors/hydrophones/wave1", &wave1);
+//ros::Publisher wave_pub2("/sensors/hydrophones/wave2", &wave2);
+ros::Publisher fourier_pub0("/sensors/hydrophones/fourier0", &fourier0);
+//ros::Publisher fourier_pub1("/sensors/hydrophones/fourier1", &fourier1);
+//ros::Publisher fourier_pub2("/sensors/hydrophones/fourier2", &fourier2);*/
+
 
 /* USER CODE END PV */
 
@@ -65,11 +84,53 @@ static void MX_ADC1_Init(void);
 void StartDefaultTask(void const * argument);
 
 /* USER CODE BEGIN PFP */
+#ifdef __GNUC__
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif
 
+PUTCHAR_PROTOTYPE
+{
+  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  return ch;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint32_t usecs_elapsed = 0;
+volatile uint16_t adcChannels[4];
+volatile int conversionComplete = 0;
+
+typedef enum {
+	INIT,
+	HYDROPHONE1,
+	HYDROPHONE2,
+	HYDROPHONE3
+} Hydrophone;
+
+volatile Hydrophone curPhone = INIT;
+
+__always_inline void calculateVoltage(uint16_t VREFINT_DATA, uint16_t ADC_DATA, float32_t *pOut) {
+	float32_t VREFINT_CAL = (float32_t) *((uint16_t*) VREFINT_CAL_ADDR);
+	float32_t Vdda = 3.0 * (VREFINT_CAL / VREFINT_DATA);
+	*pOut = (Vdda / 4095) * (float32_t)ADC_DATA;
+}
+
+__always_inline void calculateVariance(float32_t *pSum, float32_t *pSumSquares, float32_t *pResult) {
+	*pResult = ((*pSumSquares) - ((powf((*pSum), 2))/512.0f)) / (512.0f - 1.0f);
+	*pSum = 0;
+	*pSumSquares = 0;
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+  nh.getHardware()->flush();
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+  nh.getHardware()->reset_rbuf();
+}
 
 /* USER CODE END 0 */
 
@@ -107,7 +168,42 @@ int main(void)
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-
+  float32_t hydrophone1[1024];
+  float32_t hydrophone2[1024];
+  float32_t hydrophone3[1024];
+  float32_t fourier_wave0[512];
+  float32_t fourier_wave1[512];
+  float32_t fourier_wave2[512];
+  float32_t V1, V2, V3;
+  float32_t v1Variance;
+  float32_t v1Sum = 0;
+  float32_t v1SumSquares = 0;
+  float32_t v2Variance;
+  float32_t v2Sum = 0;
+  float32_t v2SumSquares = 0;
+  float32_t v3Variance;
+  float32_t v3Sum = 0;
+  float32_t v3SumSquares = 0;
+  uint32_t index = 0;
+  uint32_t times[3];
+  uint32_t frequency0 = 0;
+  uint32_t frequency1 = 0;
+  uint32_t frequency2 = 0;
+  HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+  for (int i = 0; i < 512; i++) {
+	  hydrophone1[2*i + 1] = 0;
+	  hydrophone2[2*i + 1] = 0;
+	  hydrophone3[2*i + 1] = 0;
+  }
+  /*nh.initNode();
+  nh.advertise(hpub);
+  nh.advertise(wave_pub0);
+  //nh.advertise(wave_pub1);
+  //nh.advertise(wave_pub2);
+  nh.advertise(fourier_pub0);
+  //nh.advertise(fourier_pub1);
+  //nh.advertise(fourier_pub2);*/
+  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN RTOS_MUTEX */
@@ -142,8 +238,77 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  HAL_TIM_Base_Start_IT(&htim2);
+  //printf("HI!\n\r");
   while (1)
   {
+    index = 0;
+	  for(int i = 0; i < 1536; i++) {
+		  HAL_ADC_Start_DMA(&hadc1, (uint32_t *) adcChannels, 4);
+		  while (conversionComplete == 0) {
+			  continue;
+		  }
+		  conversionComplete = 0;
+      if (i < 3)
+    	  times[i] = usecs_elapsed;
+      switch (curPhone) {
+      	case INIT:
+      		break;
+      	case HYDROPHONE1:
+      		calculateVoltage(adcChannels[0], adcChannels[1], &V1);
+      		hydrophone1[2*index] = V1;
+      		break;
+        case HYDROPHONE2:
+        	calculateVoltage(adcChannels[0], adcChannels[2], &V2);
+        	hydrophone2[2*index] = V2;
+        	break;
+        case HYDROPHONE3:
+        	calculateVoltage(adcChannels[0], adcChannels[3], &V3);
+        	hydrophone3[2*index] = V3;
+        	break;
+      }
+      if (i % 3 == 2) {
+    	  index++;
+      }
+	 }
+	wave0.data = hydrophone1;
+	wave0.data_length = 1024;
+	wave_pub0.publish(&wave0);
+	//nh.spinOnce();
+	/*wave1.data = hydrophone2;
+	wave1.data_length = 1024;
+	wave_pub1.publish(&wave1);
+	nh.spinOnce();
+	wave2.data = hydrophone3;
+	wave2.data_length = 1024;
+	wave_pub2.publish(&wave2);
+	nh.spinOnce();*/
+	get_fft(hydrophone1, fourier_wave0, 1024);
+	fourier0.data = fourier_wave0;
+	fourier0.data_length = 512;
+	fourier_pub0.publish(&fourier0);
+	//nh.spinOnce();
+	/*get_fft(hydrophone2, fourier_wave1, 1024);
+	fourier1.data = fourier_wave1;
+	fourier1.data_length = 512;
+	fourier_pub1.publish(&fourier1);
+	nh.spinOnce();
+	get_fft(hydrophone3, fourier_wave2, 1024);
+	fourier2.data = fourier_wave2;
+	fourier2.data_length = 512;
+	fourier_pub2.publish(&fourier2);
+	nh.spinOnce();*/
+    frequency0 = get_frequency(hydrophone1, 1024, 4705882.3529);
+    frequency1 = get_frequency(hydrophone2, 1024, 4705882.3529);
+    frequency2 = get_frequency(hydrophone3, 1024, 4705882.3529);
+    if (frequency0 == frequency1 && frequency0 == frequency2) {
+		/*pingerTimeDifference.frequency = frequency0;
+		pingerTimeDifference.times = times;
+		pingerTimeDifference.times_length = 3;
+		hpub.publish(&pingerTimeDifference);*/
+    }
+	//nh.spinOnce();
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -425,7 +590,27 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	usecs_elapsed += 10;
+}
 
+
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc) {
+	switch (curPhone) {
+	case INIT:
+		curPhone = HYDROPHONE1;
+		break;
+	case HYDROPHONE1:
+		curPhone = HYDROPHONE2;
+		break;
+	case HYDROPHONE2:
+		curPhone = HYDROPHONE3;
+		break;
+	case HYDROPHONE3:
+		curPhone = HYDROPHONE1;
+  }
+  conversionComplete = 1;
+}
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
