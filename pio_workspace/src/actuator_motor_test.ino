@@ -1,3 +1,5 @@
+// USING SERVO CONNECTED TO ACTUATOR BOARD
+
 #include <Servo.h>
 
 Servo myservo;  // create Servo object to control a servo
