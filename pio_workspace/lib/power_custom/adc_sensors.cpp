@@ -1,7 +1,6 @@
 /* 
 Revision 1.0
 Commenter: Dorothy Ma
-Date: Jan 27, 2025
 
 FUNCTIONS TO USE VOLTAGE- AND CURRENT-SENSING WITH ADCS:
 1) call "begin()" to initialize the ADCs and indicate whether to enableVoltage- and or enableCurrent-sensing
@@ -12,7 +11,7 @@ FUNCTIONS TO USE VOLTAGE- AND CURRENT-SENSING WITH ADCS:
 
 ADCSensors::ADCSensors() {
   /* 
-  CONSTRUCTOR TO INITIALIZE AN "EMPTY" OBJECT:
+  CONSTRUCTOR TO CREATE AN "EMPTY" OBJECT:
   1) voltageEnabled and currentEnabled flags are set to false
   2) the arrays for holding raw, computed, and meaningful-to-human values of the sensor are initialized to 0
   */
