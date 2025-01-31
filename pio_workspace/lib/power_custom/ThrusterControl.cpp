@@ -1,3 +1,11 @@
+/* 
+Revision 1.0
+
+FUNCTIONS TO CONTROL THRUSTERS:
+1) call "initThrusters()" to attach servos and initialize all thrusters to off state
+2) call "updateThrusters(const int16_t microseconds[8])" to update PWM signals based on the microseconds[8] array
+*/
+
 #ifdef POWER_H
 
 #include "ThrusterControl.h"

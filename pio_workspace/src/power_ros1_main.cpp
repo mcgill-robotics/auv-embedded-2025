@@ -1,3 +1,12 @@
+/* 
+Revision 1.0
+
+SETUP FOR ROS COMMUNICATION WITH THE POWER BOARD
+1) Initializes and connects thrusters, adc sensors, and temperature sensors
+2) Sets up ros nodes for advertising and subscribing
+3) Polls all sensors, publishes data, and updates thrusters every 10 ms
+*/
+
 #ifdef POWER_ROS1_H
 
 #include "power_ros1_main.h"
@@ -29,10 +38,11 @@
 #define ENABLE_VOLTAGE_SENSE true
 #define ENABLE_CURRENT_SENSE true
 
+// creates ADCSensors and TMP36 sensor objects
 ADCSensors adcSensors;
 TMP36 temperatureSensor(23, 3.3);
 
-// defines 8 thursters for ROS subscribing
+// defines 8 thrusters for ROS subscribing
 const uint8_t BACK_L = auv_msgs::ThrusterMicroseconds::BACK_LEFT;
 const uint8_t HEAVE_BACK_L = auv_msgs::ThrusterMicroseconds::HEAVE_BACK_LEFT;
 const uint8_t HEAVE_FRONT_L = auv_msgs::ThrusterMicroseconds::HEAVE_FRONT_LEFT;
@@ -46,6 +56,7 @@ const uint8_t BACK_R = auv_msgs::ThrusterMicroseconds::BACK_RIGHT;
 std_msgs::Float32 batt1_voltage_msg;
 std_msgs::Float32 batt2_voltage_msg;
 
+// defines 8 thruster current sensing for ROS advertising
 std_msgs::Float32 thruster1_current_msg;
 std_msgs::Float32 thruster2_current_msg;
 std_msgs::Float32 thruster3_current_msg;
@@ -55,6 +66,7 @@ std_msgs::Float32 thruster6_current_msg;
 std_msgs::Float32 thruster7_current_msg;
 std_msgs::Float32 thruster8_current_msg;
 
+// defines board and teensy temperature sensing for ROS advertising
 std_msgs::Float32 board_temperature_msg;
 std_msgs::Float32 teensy_temperature_msg;
 
@@ -65,9 +77,8 @@ Servo thrusters[8];
 uint16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 
-// creates array for 2 battery voltage sensing
-float Bvoltages[2];
-float Tcurrents[8];
+float Bvoltages[2]; // array for 2 battery voltage sensing
+float Tcurrents[8]; // array for 8 thrusters current sensing
 float boardTemperature;
 float teensyTemperature;
 
@@ -118,7 +129,7 @@ ros::Publisher thruster8_current("/power/thrusters/current/8", &thruster8_curren
 ros::Publisher board_temperature("/power/board/temperature", &board_temperature_msg);
 ros::Publisher teensy_temperature("/power/teensy/temperature", &teensy_temperature_msg);
 
-// senses the voltages of the 2 batteries
+// senses the battery voltages, thruster currents, and board and teensy temperatures
 void senseData() {
     float* voltagePtr = adcSensors.senseVoltage();
     float* currentPtr = adcSensors.senseCurrent();
@@ -171,9 +182,10 @@ void publishData() {
     teensy_temperature.publish(&teensy_temperature_msg);
 }
 
+// setup all thrusters and sensors and setup node handler for subscribing and advertising
 void power_ros1_setup() {
     pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_PIN, HIGH); // turn on LED_PIN
 
     initThrusters();
 
@@ -197,7 +209,7 @@ void power_ros1_setup() {
 }
 
 void power_ros1_loop() {
-    updateThrusters(microseconds);
+    updateThrusters(microseconds); 
 
     publishData();
 
