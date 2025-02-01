@@ -23,10 +23,6 @@ SETUP FOR ROS COMMUNICATION WITH THE POWER BOARD
 #include <auv_msgs/ThrusterMicroseconds.h>
 #include <std_msgs/Float32.h>
 
-// for interrupts
-#include <avr/io.h>
-#include <avr/interrupt.h>
-
 // defines thruster pins
 #define BACK_L_PIN 2
 #define HEAVE_BACK_L_PIN 3
