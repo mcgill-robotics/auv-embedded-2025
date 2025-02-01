@@ -452,8 +452,8 @@ std_msgs::Float64 depth_msg;
 // Subscribes to battery voltages, thruster microseconds, device statuses, status message, and tether status
 ros::Publisher DEPTH("/sensors/depth/z", &depth_msg);
 ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
-ros::Subscriber<std_msgs::Float32> BATT1("/display/batteries/voltage/1", &batt1MessageCallback);
-ros::Subscriber<std_msgs::Float32> BATT2("/display/batteries/voltage/2", &batt2MessageCallback);
+ros::Subscriber<std_msgs::Float32> BATT1("/power/batteries/voltage/1", &batt1MessageCallback);
+ros::Subscriber<std_msgs::Float32> BATT2("/power/batteries/voltage/2", &batt2MessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEIMU("/sensors/imu/status", &devicesIMUMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEDVL("/sensors/dvl/status", &devicesDVLMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEPS("/sensors/depth/status", &devicesPSMessageCallback);
