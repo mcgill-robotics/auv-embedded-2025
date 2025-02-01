@@ -23,6 +23,10 @@ SETUP FOR ROS COMMUNICATION WITH THE POWER BOARD
 #include <auv_msgs/ThrusterMicroseconds.h>
 #include <std_msgs/Float32.h>
 
+// for interrupts
+#include <avr/io.h>
+#include <avr/interrupt.h>
+
 // defines thruster pins
 #define BACK_L_PIN 2
 #define HEAVE_BACK_L_PIN 3
@@ -33,6 +37,7 @@ SETUP FOR ROS COMMUNICATION WITH THE POWER BOARD
 #define HEAVE_BACK_R_PIN 8
 #define BACK_R_PIN 9
 
+#define WATER_PIN 11
 #define LED_PIN 13
 
 #define ENABLE_VOLTAGE_SENSE true
@@ -182,10 +187,26 @@ void publishData() {
     teensy_temperature.publish(&teensy_temperature_msg);
 }
 
+// ISR for when water is detected
+void water_detected() {
+    while (true) {
+        digitalWrite(LED_PIN, HIGH);
+        delayMicroseconds(500000);
+        digitalWrite(LED_PIN, LOW);
+        delayMicroseconds(500000);
+    }
+}
+
+
 // setup all thrusters and sensors and setup node handler for subscribing and advertising
 void power_ros1_setup() {
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH); // turn on LED_PIN
+
+    // setup water detection interrupt
+    pinMode(WATER_PIN, INPUT_PULLDOWN); // pulldown to prevent floating when inactive
+    attachInterrupt(digitalPinToInterrupt(WATER_PIN), water_detected, RISING);
+    NVIC_SET_PRIORITY(IRQ_GPIO6789, 32); // can change the priority value (multiples of 16, 0 being the highest)
 
     initThrusters();
 
