@@ -28,6 +28,7 @@ void senseData() {
 
 void publishData() {
     senseData();
+    thruster_force_msg.data = thrusterForce;
     thruster_force.publish(&thruster_force_msg);
 }
 

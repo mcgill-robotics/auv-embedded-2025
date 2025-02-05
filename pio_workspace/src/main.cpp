@@ -35,7 +35,7 @@ void loop() {
     power_loop();
   #elif POWER_ROS1_H
     power_ros1_loop();
-  elif THRUSTER_TESTS_H
+  #elif THRUSTER_TESTS_H
     thruster_tests_loop();
   #endif
 }
