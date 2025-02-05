@@ -12,6 +12,7 @@ DOCKER:
 sudo apt update
 sudo apt install tmux -y
 sudo apt install git -y
+sudo apt install vim -y
 sudo apt install -y ros-noetic-rosserial
 sudo apt install python3-catkin-tools -y
 sudo apt install ros-noetic-rosserial-arduino ros-noetic-rosserial -y
