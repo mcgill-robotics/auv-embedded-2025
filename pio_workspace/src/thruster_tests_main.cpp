@@ -9,6 +9,9 @@
 #include <std_msgs/Float32.h>
 
 #define LED_PIN 13
+#define BUTTON 2
+#define YELLOW_LED 3
+#define GREEN_LED 4
 
 std_msgs::Float32 thruster_force_msg;
 float thrusterForce = -1;
@@ -33,9 +36,9 @@ void publishData() {
 }
 
 void thruster_tests_setup() {
-    pinMode(2, INPUT);
-    pinMode(3, OUTPUT);
-    pinMode(4, OUTPUT);
+    pinMode(BUTTON, INPUT);
+    pinMode(YELLOW_LED, OUTPUT);
+    pinMode(GREEN_LED, OUTPUT);
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
 
@@ -45,13 +48,15 @@ void thruster_tests_setup() {
 }
 
 void thruster_tests_loop() {
-    if (digitalRead(2) == HIGH) {
-        digitalWrite(3, HIGH);
-        digitalWrite(4, LOW);
+    digitalWrite(LED_PIN, !digitalRead(LED_PIN));
+    if (digitalRead(BUTTON) == HIGH) {
+        digitalWrite(YELLOW_LED, HIGH);
+        digitalWrite(GREEN_LED, LOW);
     } else {
-        digitalWrite(3, LOW);
-        digitalWrite(4, HIGH);
+        digitalWrite(YELLOW_LED, LOW);
+        digitalWrite(GREEN_LED, HIGH);
     }
+    
     publishData();
     nh.spinOnce();
     delay(10);
