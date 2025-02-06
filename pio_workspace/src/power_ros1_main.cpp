@@ -36,8 +36,8 @@ SETUP FOR ROS COMMUNICATION WITH THE POWER BOARD
 
 #define LED_PIN 13
 
-#define ENABLE_VOLTAGE_SENSE false
-#define ENABLE_CURRENT_SENSE false
+#define ENABLE_VOLTAGE_SENSE true
+#define ENABLE_CURRENT_SENSE true
 
 // creates ADCSensors and TMP36 sensor objects
 ADCSensors adcSensors;

@@ -35,7 +35,7 @@ void sensor_setup() {
     boolean _tare = true;
     LoadCell.start(stabilizingtime, _tare);
     if (LoadCell.getTareTimeoutFlag()) {
-        //while (1);
+        while (1);
     } else {
         LoadCell.setCalFactor(calibrationValue);
     }
