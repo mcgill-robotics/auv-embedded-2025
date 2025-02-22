@@ -11,6 +11,11 @@
 #define TOUCH_CS 8
 #define TOUCH_IRQ 2
 
+// Declaring functions
+void initDryTestPage();
+void initMainPage();
+void updateThrusters();
+
 // Create objects for display and touchscreen
 ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC);
 XPT2046_Touchscreen ts(TOUCH_CS);
