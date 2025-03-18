@@ -1,4 +1,4 @@
-#ifdef DISPLAY_H
+/*#ifdef DISPLAY_H
 
 #include "display_main.h"
 #include <SPI.h>       
@@ -101,10 +101,6 @@ void handleTouch() {
       p.y = map(p.y, 200, 4000, 240, 0);
       int16_t x = p.x;  
       int16_t y = p.y;
-
-      Serial.print("Touch: ("); Serial.print(x);
-      Serial.print(", "); Serial.print(y);
-      Serial.println(")");
 
       if (!isInDryTestMode) {
         // Main screen button press detection
@@ -214,7 +210,6 @@ void updateThrusters() {
 
 void display_setup(){
     // put your setup code here, to run once:
-    Serial.begin(38400);  // For debugging
   tft.begin();
   ts.begin();
   ts.setRotation(1); // Ensure touch orientation is consistent
@@ -224,8 +219,8 @@ void display_setup(){
 
 void display_loop(){
     // put your main code here, to run repeatedly:
-      delay(10);
+  delay(10);
   handleTouch();
 }
 //hello this is a just a test because I dont know what I am doing lol 
-#endif
+#endif*/

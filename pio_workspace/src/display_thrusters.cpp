@@ -1,6 +1,9 @@
-/*#include "SPI.h"
+/*#include "display_main.h"
+#include "SPI.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
+#include <ILI9341_t3.h>
+#include <XPT2046_Touchscreen.h>
 #include <Wire.h>
 #include <ros.h>
 #include <auv_msgs/ThrusterMicroseconds.h>
@@ -13,6 +16,11 @@
 // Define pin configurations
 #define TFT_DC 9
 #define TFT_CS 10
+#define TOUCH_CS 8
+
+// Create objects for display and touchscreen
+ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC);
+XPT2046_Touchscreen ts(TOUCH_CS);
 
 // Define color constants
 #define BLACK 0x0000
@@ -23,6 +31,14 @@
 #define MAGENTA 0xF81F
 #define YELLOW 0xFFE0
 #define WHITE 0xFFFF
+
+// Colors for the rectangles
+#define BATTERY_COLOR ILI9341_YELLOW
+#define NUM_COLOR ILI9341_CYAN
+#define LABEL_COLOR ILI9341_MAGENTA
+#define MAIN_RECT_COLOR ILI9341_WHITE
+#define DRY_TEST_COLOR ILI9341_GREEN
+#define BACKGROUND_COLOR ILI9341_BLACK
 
 // Define display dimensions
 #define HEIGHT 240
@@ -72,7 +88,7 @@ void initMainPage() {
   tft.fillScreen(BACKGROUND_COLOR); // Main screen background
 
   // Draw buttons
-  for (const Button &btn : buttons) {
+  for (const Button &btn : buttons_thrusters) {
     tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
     tft.setTextColor(ILI9341_BLACK);
     tft.setCursor(btn.x + 5, btn.y + 10);
@@ -83,7 +99,7 @@ void initMainPage() {
 
 
 // Function to update thrusters display
-void thrusters(int T1, int T2, i\nt T3, int T4, int T5, int T6, int T7, int T8) {
+void thrusters(int T1, int T2, int T3, int T4, int T5, int T6, int T7, int T8) {
   int temp_thrusters[] = { T1, T2, T3, T4, T5, T6, T7, T8 };
   uint16_t thruster_colors[] = { RED, GREEN };
 
@@ -92,7 +108,7 @@ void thrusters(int T1, int T2, i\nt T3, int T4, int T5, int T6, int T7, int T8) 
     uint16_t color = thruster_colors[temp_thrusters[i]];
 
     if (temp_thrusters[i] != thrusters_old[i]) {
-      buttons_thrusters[i].color = color
+      buttons_thrusters[i].color = color;
     }
   }
 
