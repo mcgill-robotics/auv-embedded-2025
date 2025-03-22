@@ -29,6 +29,8 @@
 #define ENABLE_VOLTAGE_SENSE true
 #define ENABLE_CURRENT_SENSE true
 
+#define KS_PIN 10
+
 ADCSensors adcSensors;
 TMP36 temperatureSensor(23, 3.3);
 
@@ -174,6 +176,7 @@ void publishData() {
 void power_ros1_setup() {
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, HIGH);
+    pinMode(KS_PIN, OUTPUT);
 
     initThrusters();
 
@@ -197,13 +200,16 @@ void power_ros1_setup() {
 }
 
 void power_ros1_loop() {
-    updateThrusters(microseconds);
-
     publishData();
 
-    nh.spinOnce();
-
-    delay(10);
+    // if voltage less than 14.8, kill switch should output high
+    if (Bvoltages[0] < 14.8 && Bvoltages[1] < 14.8) {
+        digitalWrite(KS_PIN, HIGH);
+    } else {
+        nh.spinOnce();
+        delay(10);
+        updateThrusters(microseconds);
+    }
 }
 
 #endif
