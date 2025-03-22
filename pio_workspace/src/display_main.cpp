@@ -472,7 +472,7 @@ void publish_depth() {
   DEPTH.publish(&depth_msg);
 }
 
-void setup() {
+void display_setup() {
   // Initialize I2C communication with sensor
   Wire.begin();
   sensor.init();
@@ -519,7 +519,7 @@ void setup() {
   }
 }
 
-void loop() {
+void display_loop() {
   // Handle ROS communication
   nh.spinOnce();
 
