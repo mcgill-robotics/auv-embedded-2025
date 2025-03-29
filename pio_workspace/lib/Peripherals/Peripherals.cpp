@@ -1,5 +1,6 @@
-#include <SPI.h>       
-#include <ILI9341_t3.h>
+#include <SPI.h>   
+
+#include <Adafruit_ILI9341.h>     
 #include <XPT2046_Touchscreen.h>
 
 //UPDATE
@@ -21,7 +22,7 @@
 #define TOUCH_IRQ 2
 
 // Create objects for display and touchscreen
-ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC);
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 XPT2046_Touchscreen ts(TOUCH_CS);
 
 // Colors for the rectangles
@@ -106,6 +107,81 @@ bool isInDryTestMode = false; // Flag for Dry Test mode
 
 int thruster_states[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // All thrusters initially off
 
+// Main page setup
+void initMainPage() {
+  tft.setRotation(1);
+  tft.fillScreen(BACKGROUND_COLOR); // Main screen background
+
+  // Draw buttons
+  for (const Button &btn : buttons) {
+    tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
+    tft.setTextColor(ILI9341_BLACK);
+    tft.setCursor(btn.x + 5, btn.y + 10);
+    tft.setTextSize(2);
+    tft.print(btn.label);
+  }
+}
+
+// Update thruster display
+void updateThrusters() {
+  uint16_t thruster_colors[] = {DARK_GRAY, CYAN};
+
+  for (int i = 0; i < 8; i++) {
+    int row = i / 4;
+    int col = i % 4;
+    int x = 43 + col * 60;
+    int y = 65 + row * 60;
+    uint16_t color = thruster_colors[thruster_states[i]];
+
+    // Update thruster display
+    tft.fillRoundRect(x + 2, y + 2, 46, 46, 10, color);
+
+    // Display thruster number
+    tft.setCursor(x + 15, y + 12);
+    tft.setTextColor(DARK_GRAY);
+    tft.setTextSize(2);
+    tft.print(i + 1);
+  }
+}
+
+// Dry Test page setup
+void initDryTestPage() {
+  tft.setRotation(1);
+  tft.fillScreen(BACKGROUND_COLOR); // Dry Test page background
+
+  // Draw thruster layout
+  for (int i = 0; i < 8; i++) {
+    int row = i / 4;
+    int col = i % 4;
+    int x = 43 + col * 60;
+    int y = 65 + row * 60;
+    tft.drawRoundRect(x, y, 50, 50, 10, LIGHT_GRAY); // Thruster button outline
+  }
+
+  // Title text
+  tft.setCursor(WIDTH / 2 - 110, HEIGHT / 3 - 30);
+  tft.setTextColor(LIGHT_GRAY);
+  tft.setTextSize(1);
+  tft.println("Dry Test Mode");
+
+  // Back button layout
+  int backButtonX = 8;
+  int backButtonY = 10;
+  int backButtonWidth = 60;
+  int backButtonHeight = 30;
+  tft.fillRoundRect(backButtonX, backButtonY, backButtonWidth, backButtonHeight, 5, LIGHT_GRAY);
+  tft.drawRoundRect(backButtonX, backButtonY, backButtonWidth, backButtonHeight, 5, WHITE);
+  tft.setCursor(backButtonX + 10, backButtonY + 8);
+  tft.setTextColor(DARK_GRAY);
+  tft.setTextSize(2);
+  tft.print("BACK");
+
+  // Update thruster display
+  updateThrusters();
+}
+
+
+
 void handleTouch() {
    // Update touch detection
 
@@ -158,23 +234,10 @@ void handleTouch() {
   }
 }
 
-// Main page setup
-void initMainPage() {
-  tft.setRotation(1);
-  tft.fillScreen(BACKGROUND_COLOR); // Main screen background
 
-  // Draw buttons
-  for (const Button &btn : buttons) {
-    tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
-    tft.setTextColor(ILI9341_BLACK);
-    tft.setCursor(btn.x + 5, btn.y + 10);
-    tft.setTextSize(2);
-    tft.print(btn.label);
-  }
-}
 //UPDATE//
 //UPDATE DEVICES DISPLAY//
-void devices(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
+void device(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
   int temp_devices[] = {IMU, DVL, PS, HYD, ACT, FC, DC};
   uint16_t device_colors[] = {RED, GREEN}; // RED = offline, GREEN = online
   int device_x[] = {0, 276, 46, 92, 138, 184, 230}; 
@@ -206,63 +269,7 @@ void devices(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
 }
 
 
-// Dry Test page setup
-void initDryTestPage() {
-  tft.setRotation(1);
-  tft.fillScreen(BACKGROUND_COLOR); // Dry Test page background
 
-  // Draw thruster layout
-  for (int i = 0; i < 8; i++) {
-    int row = i / 4;
-    int col = i % 4;
-    int x = 43 + col * 60;
-    int y = 65 + row * 60;
-    tft.drawRoundRect(x, y, 50, 50, 10, LIGHT_GRAY); // Thruster button outline
-  }
-
-  // Title text
-  tft.setCursor(WIDTH / 2 - 110, HEIGHT / 3 - 30);
-  tft.setTextColor(LIGHT_GRAY);
-  tft.setTextSize(1);
-  tft.println("Dry Test Mode");
-
-  // Back button layout
-  int backButtonX = 8;
-  int backButtonY = 10;
-  int backButtonWidth = 60;
-  int backButtonHeight = 30;
-  tft.fillRoundRect(backButtonX, backButtonY, backButtonWidth, backButtonHeight, 5, LIGHT_GRAY);
-  tft.drawRoundRect(backButtonX, backButtonY, backButtonWidth, backButtonHeight, 5, WHITE);
-  tft.setCursor(backButtonX + 10, backButtonY + 8);
-  tft.setTextColor(DARK_GRAY);
-  tft.setTextSize(2);
-  tft.print("BACK");
-
-  // Update thruster display
-  updateThrusters();
-}
-
-// Update thruster display
-void updateThrusters() {
-  uint16_t thruster_colors[] = {DARK_GRAY, CYAN};
-
-  for (int i = 0; i < 8; i++) {
-    int row = i / 4;
-    int col = i % 4;
-    int x = 43 + col * 60;
-    int y = 65 + row * 60;
-    uint16_t color = thruster_colors[thruster_states[i]];
-
-    // Update thruster display
-    tft.fillRoundRect(x + 2, y + 2, 46, 46, 10, color);
-
-    // Display thruster number
-    tft.setCursor(x + 15, y + 12);
-    tft.setTextColor(DARK_GRAY);
-    tft.setTextSize(2);
-    tft.print(i + 1);
-  }
-}
 
 // Callback function for IMU message
 void devicesIMUMessageCallback(const std_msgs::Int32& msg) {
@@ -307,7 +314,7 @@ ros::Subscriber<std_msgs::Int32> DEVICEACT("/sensors/actuator/status", &devicesA
 ros::Subscriber<std_msgs::Int32> DEVICEFC("/sensors/front_camera/status", &devicesFCMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEDC("/sensors/down_camera/status", &devicesDCMessageCallback);
 
-void setup() {
+void display_setup() {
   Serial.begin(38400);  // For debugging
   tft.begin();
   ts.begin();
@@ -324,7 +331,7 @@ void setup() {
 
 }
 
-void loop() {
+void display_loop() {
   static unsigned long lastRosUpdate = 0;
   
   if (millis() - lastRosUpdate > 100) { 
@@ -333,7 +340,7 @@ void loop() {
   }
   handleTouch();
   //update display with new data
-  devices(devices_new[0], devices_new[1], devices_new[2], devices_new[3], devices_new[4], devices_new[5], devices_new[6]);
+  device(devices_new[0], devices_new[1], devices_new[2], devices_new[3], devices_new[4], devices_new[5], devices_new[6]);
 
 
   //delay for stability
