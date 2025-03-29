@@ -13,6 +13,13 @@
 #include <std_msgs/String.h>
 #include <cmath>
 
+// Forward declarations (tell the compiler these functions exist)
+void initMainPage();
+void initDryTestPage();
+void updateThrusters();
+void handleTouch();
+
+
 
 
 // Pin Definitions
@@ -222,8 +229,8 @@ void handleTouch() {
       Serial.print("Touch: ("); Serial.print(x);
       Serial.print(", "); Serial.print(y);
       Serial.println(")");
-
-      if (!isInDryTestMode) {
+    
+    if (!isInDryTestMode) {
         // Main screen button press detection
         if (x >= 0 && x <= 300 && y >= 60 && y <= 110) {  // Dry Test button
           isInDryTestMode = true;
@@ -329,7 +336,9 @@ void updateThrusters() {
   }
 }
 
-void setup() {
+
+
+void display_setup() {
   Serial.begin(38400);  // For debugging
   tft.begin();
   ts.begin();
@@ -356,7 +365,7 @@ void setup() {
   initMainPage();
 }
 
-void loop() {
+void display_loop() {
   //Mia update
   handleTouch();
 
@@ -378,3 +387,5 @@ void loop() {
   delay(10);
   //handleTouch();
 }
+
+//to do next time check the library problem with adafruit 
