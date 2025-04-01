@@ -1,5 +1,5 @@
 #include <SPI.h>       
-#include <ILI9341_t3.h>
+#include <Adafruit_ILI9341.h>
 #include <XPT2046_Touchscreen.h>
 
 //UPDATE MIA
@@ -29,7 +29,7 @@ void handleTouch();
 #define TOUCH_IRQ 2
 
 // Create objects for display and touchscreen
-ILI9341_t3 tft = ILI9341_t3(TFT_CS, TFT_DC);
+Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 XPT2046_Touchscreen ts(TOUCH_CS);
 
 // Colors for the rectangles
