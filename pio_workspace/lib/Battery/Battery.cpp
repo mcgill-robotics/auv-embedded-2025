@@ -414,6 +414,7 @@ void updateThrusters() {
     tft.print(i + 1);
   }
 }
+this is just a test mia
 */
 
 
