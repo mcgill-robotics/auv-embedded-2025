@@ -15,8 +15,8 @@
 
 // Forward declarations (tell the compiler these functions exist)
 void initMainPage();
-void initDryTestPage();
-void updateThrusters();
+//void initDryTestPage();
+//void updateThrusters();
 void handleTouch();
 
 
@@ -120,22 +120,45 @@ void batt1(float V1) {
   voltages_new[0] = V1;
   if (voltages_old[0] != voltages_new[0]) {
     voltages_old[0] = voltages_new[0];
+
+    uint16_t color;
     if (V1 <= 14.8) {
-      batt_colours[0] = RED;
+      color = RED;
     } else if (V1 <= 15.8) {
-      batt_colours[0] = YELLOW;
+      color= YELLOW;
     } else {
-      batt_colours[0] = GREEN;
+      color = GREEN;
     }
 
+    buttons[0].color = color;
+    tft.fillRoundRect(buttons[0].x, buttons[0].y, 
+      buttons[0].width, buttons[0].height, 8, color);
+
+
+    //display voltage text
     char buffer[6];
     dtostrf(V1, 4, 1, buffer);
+    String voltageText = String(buffer) + "V";
+
+  
 
     tft.setTextColor(WHITE);
-    tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
-    tft.setCursor(10, 20);
-    tft.setTextSize(6);
-    tft.println(buffer);
+    //tft.fillRect(1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[0]);
+    tft.setTextSize(3);
+
+    // Calculate centered position
+    int16_t x, y;
+    uint16_t w, h;
+    tft.getTextBounds(voltageText, 0, 0, &x, &y, &w, &h);
+    tft.setCursor(buttons[0].x + (buttons[0].width - w)/2, 
+                 buttons[0].y + (buttons[0].height - h)/2);
+    tft.print(voltageText);
+
+    //tft.setCursor(buttons[0].x + 20, buttons[0].y + 15);
+    //tft.setTextSize(6);
+    //tft.print(buffer);
+    //tft.print("V");
+    
   }
 }
 
@@ -148,22 +171,47 @@ void batt2(float V2) {
   voltages_new[1] = V2;
   if (voltages_old[1] != voltages_new[1]) {
     voltages_old[1] = voltages_new[1];
+
+    // Determine color based on voltage
+    uint16_t color;
     if (V2 <= 14.8) {
-      batt_colours[1] = RED;
+      color = RED;
     } else if (V2 <= 15.8) {
-      batt_colours[1] = YELLOW;
+      color = YELLOW;
     } else {
-      batt_colours[1] = GREEN;
+      color = GREEN;
     }
 
+    // Update the button color
+    buttons[1].color = color;
+    tft.fillRoundRect(buttons[1].x, buttons[1].y, 
+      buttons[1].width, buttons[1].height, 8, color);
+
+
+    //display voltage text
     char buffer[6];
     dtostrf(V2, 4, 1, buffer);
+    String voltageText = String(buffer) + "V";
+
 
     tft.setTextColor(WHITE);
-    tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
-    tft.setCursor(WIDTH / 2 + 10, 20);
-    tft.setTextSize(6);
-    tft.println(buffer);
+    tft.setTextSize(3);
+
+    // Calculate centered position
+    int16_t x, y;
+    uint16_t w, h;
+    tft.getTextBounds(voltageText, 0, 0, &x, &y, &w, &h);
+    tft.setCursor(buttons[1].x + (buttons[1].width - w)/2, 
+                 buttons[1].y + (buttons[1].height - h)/2);
+    tft.print(voltageText);
+
+
+    //tft.fillRect(WIDTH / 2 + 1, 1, WIDTH / 2 - 2, HEIGHT / 3 - 2, batt_colours[1]);
+    //tft.setCursor(WIDTH / 2 + 10, 20);
+    //tft.setTextSize(6);
+    //tft.setCursor(buttons[1].x + 20, buttons[1].y + 15);
+    //tft.print(buffer);
+    //tft.print("V");
   }
 }
 //END OF UPDATE MIA 
@@ -177,8 +225,8 @@ struct Button {
 
 // Declare buttons
 Button buttons[] = {
-  {0, 0, 155, 50, BATTERY_COLOR, "Battery"},
-  {160, 0, 155, 50, BATTERY_COLOR, "Battery"},
+  {0, 0, 155, 50, BATTERY_COLOR, "Battery 1"},
+  {160, 0, 155, 50, BATTERY_COLOR, "Battery 2"},
   //{210, 10, 100, 50, DRY_TEST_COLOR, "Dry Test"}, // Dry Test button
   // Second Row
   {0, 55, 38, 50, NUM_COLOR, "1"},
@@ -207,9 +255,9 @@ Button buttons[] = {
 };
 
 bool wasTouched = false; // Track previous touch state
-bool isInDryTestMode = false; // Flag for Dry Test mode
+//bool isInDryTestMode = false; // Flag for Dry Test mode
 
-int thruster_states[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // All thrusters initially off
+//int thruster_states[8] = {0, 0, 0, 0, 0, 0, 0, 0}; // All thrusters initially off
 
 void handleTouch() {
    // Update touch detection
@@ -229,7 +277,7 @@ void handleTouch() {
       Serial.print("Touch: ("); Serial.print(x);
       Serial.print(", "); Serial.print(y);
       Serial.println(")");
-    
+    /*
     if (!isInDryTestMode) {
         // Main screen button press detection
         if (x >= 0 && x <= 300 && y >= 60 && y <= 110) {  // Dry Test button
@@ -257,6 +305,7 @@ void handleTouch() {
           }
         }
       }
+    */
     }
   } else {
     wasTouched = false; // Reset flag when touch is released
@@ -271,14 +320,44 @@ void initMainPage() {
   // Draw buttons
   for (const Button &btn : buttons) {
     tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
-    tft.setTextColor(ILI9341_BLACK);
-    tft.setCursor(btn.x + 5, btn.y + 10);
-    tft.setTextSize(2);
-    tft.print(btn.label);
+    //tft.setTextColor(ILI9341_BLACK);
+    //tft.setCursor(btn.x + 5, btn.y + 10);
+
+    // Only show labels for battery buttons (first two)
+    if (&btn == &buttons[0] || &btn == &buttons[1]) {
+      tft.setTextColor(BLACK);
+      tft.setTextSize(2);
+      
+      int16_t x, y;
+      uint16_t w, h;
+      tft.getTextBounds(btn.label, 0, 0, &x, &y, &w, &h);
+      tft.setCursor(btn.x + (btn.width - w)/2, 
+                   btn.y + (btn.height - h)/2);
+      tft.print(btn.label);
+    } else {
+      // For other buttons, draw normally
+      tft.setTextColor(BLACK);
+      tft.setTextSize(2);
+      tft.setCursor(btn.x + 5, btn.y + 10);
+      tft.print(btn.label);
+
+
+    //tft.setTextColor(BLACK); //text color for initial state
+    //tft.setTextSize(2);
+    //tft.print(btn.label);
+
+    // Center the label text
+    //int16_t x, y;
+    //uint16_t w, h;
+    //tft.getTextBounds(btn.label, 0, 0, &x, &y, &w, &h);
+    //tft.setCursor(btn.x + (btn.width - w)/2, btn.y + (btn.height - h)/2 - 10);
+    //tft.print(btn.label);
+    }
   }
 }
 
 // Dry Test page setup
+/*
 void initDryTestPage() {
   tft.setRotation(1);
   tft.fillScreen(BACKGROUND_COLOR); // Dry Test page background
@@ -335,6 +414,7 @@ void updateThrusters() {
     tft.print(i + 1);
   }
 }
+*/
 
 
 
@@ -387,5 +467,3 @@ void display_loop() {
   delay(10);
   //handleTouch();
 }
-
-//to do next time check the library problem with adafruit 
