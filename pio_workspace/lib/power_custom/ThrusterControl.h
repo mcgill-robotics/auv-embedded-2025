@@ -1,3 +1,9 @@
+/* 
+Revision 1.0
+
+HEADER FILE FOR THRUSTER CONTROL
+*/
+
 #ifdef POWER_H
 
 #ifndef THRUSTER_CONTROL_H
