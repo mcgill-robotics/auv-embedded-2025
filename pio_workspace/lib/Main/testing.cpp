@@ -275,7 +275,7 @@ void device(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
     }
 
   for (int i = 0; i < 7; i++) {
-    thrusters_old[i] = temp_devices[i];
+    devices_old[i] = temp_devices[i];
   }
 
   }
