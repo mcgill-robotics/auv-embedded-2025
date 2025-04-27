@@ -2,7 +2,7 @@
     <arg name="sim" default="false" />
     <group unless="$(arg sim)">
         <node name="thrusters_serial_server" pkg="rosserial_python" type="serial_node.py" respawn="true">
-            <param name="port" value="/dev/power"/>
+            <param name="port" value="/dev/ttyACM0"/>
             <param name="baud" value="115200"/>
         </node>
     </group>
