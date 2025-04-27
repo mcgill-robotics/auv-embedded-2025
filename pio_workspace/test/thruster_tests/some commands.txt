@@ -1,0 +1,44 @@
+CMD:
+usbipd list
+usbipd bind --busid <bus_id>
+usbipd attach --wsl --busid <bus_id>
+
+
+UBUNTU:
+sudo docker run -it --rm --device=/dev/ttyUSB0 ros:noetic bash
+
+
+DOCKER:
+sudo apt update
+sudo apt install tmux -y
+sudo apt install git -y
+sudo apt install vim -y
+sudo apt install -y ros-noetic-rosserial
+sudo apt install python3-catkin-tools -y
+sudo apt install ros-noetic-rosserial-arduino ros-noetic-rosserial -y
+source /opt/ros/noetic/setup.bash
+
+git clone https://github.com/mcgill-robotics/auv-2025
+cd auv-2025/catkin_ws
+catkin build
+source devel/setup.bash
+
+TMUX:
+1.
+catkin build
+source devel/setup.bash
+roslaunch propulsion propulsion.launch
+
+2.
+catkin build
+source devel/setup.bash
+rosrun rosserial_python serial_node.py _port:=/dev/ttyUSB0
+
+3.
+rostopic list
+rostopic echo /thruster/force
+
+
+UBUNTU:
+sudo docker ps
+sudo docker cp <container_id>:<container_path> <destination_path>
