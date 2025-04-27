@@ -22,6 +22,11 @@ if __name__ == "__main__":
 
     # Ascending sequence
     for pwm in range(1508, 1901, 8):  # Changed step to 8
+        # Initial arming
+        pwm_array[thruster_num] = 1500
+        pub.publish(ThrusterMicroseconds(pwm_array))
+        time.sleep(15)
+
         pwm_array[thruster_num] = pwm
         pub.publish(ThrusterMicroseconds(pwm_array))
         print(f"Sent PWM {pwm} to thruster {thruster_num + 1}")
