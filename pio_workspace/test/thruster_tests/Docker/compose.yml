@@ -1,0 +1,14 @@
+services:
+  auv-container:
+    build: .
+    privileged: true  # important to access USB devices
+    devices:
+      - /dev/bus/usb:/dev/bus/usb  # expose ALL usb devices
+    tty: true  # keep the container open
+    stdin_open: true  # allow interactive bash session
+    volumes:
+      - .:/auv-2025  # optional: mount current folder
+    environment:
+      - DISPLAY=${DISPLAY}
+    network_mode: host  # optional: if you need network
+
