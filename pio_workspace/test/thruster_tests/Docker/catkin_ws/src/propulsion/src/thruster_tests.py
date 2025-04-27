@@ -21,28 +21,41 @@ if __name__ == "__main__":
     pwm_array = [1500] * 8
 
     # Ascending sequence
-    for pwm in range(1520, 1901, 20):
+    for pwm in range(1508, 1901, 8):  # Changed step to 8
         pwm_array[thruster_num] = pwm
         pub.publish(ThrusterMicroseconds(pwm_array))
         print(f"Sent PWM {pwm} to thruster {thruster_num + 1}")
-        time.sleep(1.5)
+
+        # Sleep for 3.5 seconds if not 1500, otherwise 15 seconds
+        if pwm != 1500:
+            time.sleep(3.5)
+        else:
+            time.sleep(15)
 
         # Set back to neutral
         pwm_array[thruster_num] = 1500
         pub.publish(ThrusterMicroseconds(pwm_array))
-        time.sleep(1.5)
+        
+        # Sleep for 3.5 seconds when going back to neutral (1500)
+        time.sleep(15)
 
     # Descending sequence
-    for pwm in range(1480, 1099, -20):
+    for pwm in range(1492, 1099, -8):  # Changed step to 8
         pwm_array[thruster_num] = pwm
         pub.publish(ThrusterMicroseconds(pwm_array))
         print(f"Sent PWM {pwm} to thruster {thruster_num + 1}")
-        time.sleep(1.5)
+
+        # Sleep for 3.5 seconds if not 1500, otherwise 15 seconds
+        if pwm != 1500:
+            time.sleep(3.5)
+        else:
+            time.sleep(15)
 
         # Set back to neutral
         pwm_array[thruster_num] = 1500
         pub.publish(ThrusterMicroseconds(pwm_array))
-        time.sleep(1.5)
+        
+        # Sleep for 3.5 seconds when going back to neutral (1500)
+        time.sleep(15)
 
     print("Thruster test complete.")
-
