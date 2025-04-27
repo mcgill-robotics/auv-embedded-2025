@@ -5,13 +5,16 @@ docker exec -it docker-auv-container-1 bash
 cd auv-2025/catkin_ws && catkin build && source devel/setup.bash && tmux
 
 1.
-source devel/setup.bash && roslaunch rosserial_python serial_node.launch dev:=/dev/ttyACM1
+roscore
 
 2.
-source devel/setup.bash && roslaunch propulsion thrustertest.launch
+source devel/setup.bash && rosrun rosserial_python serial_node.py /dev/ttyACM1
 
 3.
-source devel/setup.bash && rostopic echo -p /all/data > /ThrusterX.csv
+source devel/setup.bash && roslaunch propulsion thrustertest.launch
 
 4.
+source devel/setup.bash && rostopic echo -p /all/data >> ./ThrusterX.csv
+
+5.
 source devel/setup.bash && rostopic echo /all/data
