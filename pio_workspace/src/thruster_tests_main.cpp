@@ -30,7 +30,7 @@ unsigned long t = 0;
 void sensor_setup() {
     LoadCell.begin();
     float calibrationValue;
-    calibrationValue = 696.0;
+    calibrationValue = 178.6;
     unsigned long stabilizingtime = 2000;
     boolean _tare = true;
     LoadCell.start(stabilizingtime, _tare);
