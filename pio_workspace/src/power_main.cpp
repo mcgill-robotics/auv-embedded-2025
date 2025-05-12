@@ -1,4 +1,4 @@
-// #ifdef POWER_H
+#ifdef POWER_H
 
 #include "power_main.h"
 
