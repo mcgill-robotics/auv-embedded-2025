@@ -1,4 +1,4 @@
-#ifdef POWER_H
+// #ifdef POWER_H
 
 #include "power_main.h"
 
@@ -9,6 +9,7 @@
 #include "TMP36.h"
 
 #include <micro_ros_arduino.h>
+#include <Snooze.h>
 
 #include <stdio.h>
 #include <rcl/rcl.h>
@@ -22,6 +23,7 @@
 #include <std_msgs/msg/float32_multi_array.h>
 
 #define LED_PIN 13
+#define KSPIN 10 // which pin i'm not sure
 
 
 #define ENABLE_VOLTAGE_SENSE true
@@ -72,12 +74,21 @@ void error_loop() {
     digitalWrite(LED_PIN, HIGH);
 }
 
+// Configure Snooze Library
+SnoozeDigital snzDigi;
+SnoozeBlock snzConfig(snzDigi);
+snzDigi.pinMode(20, INPUT_PULLDOWN, RISING) // ATTN: PLACEHOLDER pin number
+
+// Set up states
 enum states {
   WAITING_AGENT,
   AGENT_AVAILABLE,
   AGENT_CONNECTED,
   AGENT_DISCONNECTED
 } state;
+
+enum powerStates {noPowerState, lowPowerState, singleBattState, dualBattState} powerState, prevPowerState;
+unsigned char singleBattNo;
 
 void propulsion_microseconds_callback(const void * msgin)
 {  
@@ -258,6 +269,19 @@ void power_setup() {
 
   // first state
   state = WAITING_AGENT;
+  powerState = noPowerState;
+  prevPowerState = noPowerState;
+  singleBattNo = 2;
+}
+
+void enterNoPower(){
+  digitalWrite(KSPIN, HIGH); // kill system through KS pin
+  destroyentities();
+  runSnooze();
+}
+
+void runSnooze(){
+  Snooze.sleep(snzConfig);
 }
 
 void power_loop() {
@@ -287,6 +311,100 @@ void power_loop() {
     default:
       break;
   }
+
+  switch (powerState) {
+    case noPowerState:
+        // V1, V2 < 13.8 (BOTH)
+        // Kill system, disable comms, set all pins to low power, activate Snooze
+        if (Bvoltages[0] > 13.8 && Bvoltages[1] > 13.8){
+          // exit noPowerState
+          if (Bvoltages[0] > 14.8) { // batt 0 is operational
+            if (Bvoltages[1] < 14.8) { // batt 1 is low
+              singleBattNo = 0;
+              powerState = singleBattState;
+            }
+            else { // batt 1 is also operational
+              powerState = dualBattState;
+            }
+          }
+          else if (Bvoltages[1] > 14.8) { // batt 1 is, but batt 0 is low P
+            singleBattNo = 1;
+            powerState = singleBattState;
+          }
+          else { // both are low P
+            powerState = lowPowerState;
+          }
+        }
+        break;
+        
+        case lowPowerState:
+        // 13.8 < V1, V2 < 14.8 (BOTH)
+        // Set pins to low power?
+        lowPower(); // run low power things
+        if (Bvoltages[0] < 13.8 || Bvoltages[1] < 13.8) {
+          // one is not sufficiently charged - ENTER No Power State
+          powerState = noPowerState;
+          enterNoPower();
+        }
+        // Need to add case where it goes from low to higher power? or not really a possibility...
+        break;
+
+        case singleBattState:
+        // V1 > 14.8 && V2 < 13.8 || V2 > 14.8 && V1 < 13.8
+        // Run as usual, but with only the one battery
+        switch (singleBattNo){
+          case 0:
+            // single battery state using only battery 0
+            if (Bvoltages[0] < 14.8) {
+              singleBattNo = 2; // reset to unused value
+              if (Bvoltages[1] > 13.8) {
+                // check other battery
+                powerState = lowPowerState;
+              }
+              else { // ENTER No Power State
+                powerState = noPowerState;
+                enterNoPower();
+              }
+            }
+            break;
+          case 1:
+          // single battery state using only battery 1
+          if (Bvoltages[1] < 14.8) {
+            // single battery in use drops below 14.8
+            singleBattNo = 2; // reset to unused value
+            if (Bvoltages[0] > 13.8) {
+              // check other battery
+              powerState = lowPowerState;
+            }
+            else {
+              powerState = noPowerState;
+              enterNoPower();
+            }
+          }
+          break;
+          default:
+          break;
+        }
+        break;
+
+        case dualBattState:
+        // V1, V2 > 14.8
+        // Run with both batteries
+        if (Bvoltages[0] < 14.8) {
+          // battery 0 drops below full operational 
+          singleBattNo = 1;
+          powerState = singleBattState;
+        }
+        else if (Bvoltages[1] < 14.8) {
+          // battery 1 drops below full operational
+          singleBattNo = 0;
+          powerState = singleBattState;
+        }
+        break;
+
+        default:
+        break;
+    }
 
   if (state == AGENT_CONNECTED) {
     digitalWrite(LED_PIN, 1);
