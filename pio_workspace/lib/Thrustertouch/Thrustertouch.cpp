@@ -106,9 +106,7 @@ int force_to_pwm(float force) {
 
 // ==== Dry Test ====
 void optimized_dry_test(int t) {
-  Serial.print("- spinning at ");
-  Serial.print(force_amt * 100);
-  Serial.println("% max forwards force for 1s");
+  
 
   float target_force = force_amt * MAX_FWD_FORCE * thruster_mount_dirs[t - 1];
   cmd_msg.microseconds[t - 1] = force_to_pwm(target_force);
@@ -117,9 +115,7 @@ void optimized_dry_test(int t) {
     pub.publish(&cmd_msg);
     delay(1000);
     pub.publish(&reset_cmd);
-  } else {
-    Serial.println("ROS not connected. Cannot publish.");
-  }
+  } 
 }
 
 // ==== UI ====
@@ -182,14 +178,14 @@ void handleTouch() {
 
         if (p.x >= x_start && p.x <= x_start + 50 &&
             p.y >= y_start && p.y <= y_start + 50) {
-          thruster_states[i] = !thruster_states[i];
-          drawThrusters();
-          if (thruster_states[i]) {
-            optimized_dry_test(i);
-            thruster_states[i] = 0;
-            drawThrusters();
-          }
-          break;
+          thruster_states[i] = 1;
+          drawThrusters();           // Show as "on"
+
+          optimized_dry_test(i);     // Waits 1s internally
+
+          thruster_states[i] = 0;
+          drawThrusters();           // Show as "off"
+          break;                     
         }
       }
     }
@@ -197,6 +193,7 @@ void handleTouch() {
     wasTouched = false;
   }
 }
+
 
 // ==== Setup ====
 void display_setup() {
