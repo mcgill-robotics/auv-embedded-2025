@@ -23,6 +23,7 @@
 // Create objects for display and touchscreen
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 XPT2046_Touchscreen ts(TOUCH_CS);
+#define THRUSTER_SPEED 1540
 
 // Colors for the rectangles
 #define BATTERY_COLOR ILI9341_YELLOW
@@ -144,31 +145,31 @@ void initMainPage() {
 
 // Function to update thrusters display
 void thrusters(int T1, int T2, int T3, int T4, int T5, int T6, int T7, int T8) {
+  if (isInDryTestMode) return;  // Skip drawing if in dry test mode
+
   int temp_thrusters[] = { T1, T2, T3, T4, T5, T6, T7, T8 };
-  uint16_t thruster_colors[] = {DARK_GRAY, CYAN};
+  uint16_t thruster_colors[] = {WHITE, CYAN};
 
   for (int i = 0; i < 8; i++) {
-      uint16_t color = thruster_colors[temp_thrusters[i]];
-
-      if (temp_thrusters[i] != thrusters_old[i]) {
-        buttons_thrusters[i].color = color;
-      }
+    uint16_t color = thruster_colors[temp_thrusters[i]];
+    if (temp_thrusters[i] != thrusters_old[i]) {
+      buttons_thrusters[i].color = color;
     }
+  }
 
   for (const Button &btn : buttons_thrusters) {
     tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
-    // tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
     tft.setTextColor(ILI9341_BLACK);
     tft.setCursor(btn.x + 5, btn.y + 10);
     tft.setTextSize(2);
     tft.print(btn.label);
   }
 
-
   for (int i = 0; i < 8; i++) {
     thrusters_old[i] = temp_thrusters[i];
   }
 }
+
 
 // function to update thruster statuses
 void thrusterStatus(int Sthrusters[]) {
@@ -203,7 +204,7 @@ void optimized_dry_test(int t) {
 
   if (nh.connected()) {
     pub.publish(&cmd_msg);
-    delay(3000);
+    delay(1000);
     pub.publish(&reset_cmd);
   } 
 }
@@ -233,6 +234,7 @@ void updateThrusters_page2() {
 void initDryTestPage() {
   tft.setRotation(1);
   tft.fillScreen(BACKGROUND_COLOR); // Dry Test page background
+  
 
   // Draw thruster layout
   for (int i = 0; i < 8; i++) {
@@ -287,6 +289,7 @@ void handleTouch() {
         // Main screen button press detection
         if (x >= 0 && x <= 300 && y >= 60 && y <= 110) {  // Dry Test button
           isInDryTestMode = true;
+          
           initDryTestPage();
         }
       } else {
@@ -355,6 +358,9 @@ void device(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
 
 // Callback function that updates microseconds array with values from ros
 void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
+  if (isInDryTestMode) {
+    return;
+  }
   memcpy(microseconds, tc.microseconds, 8*sizeof(uint16_t));
   thrusterStatus(Sthrusters);
 }
@@ -430,13 +436,18 @@ void display_setup() {
   nh.subscribe(DEVICEACT);
   nh.subscribe(DEVICEFC);
   nh.subscribe(DEVICEDC);
+
+  nh.advertise(pub);
+  initializeThrusterMessages();
 }
 
 void display_loop() {
   static unsigned long lastRosUpdate = 0;
 
   if (millis() - lastRosUpdate > 100) {
-    nh.spinOnce();
+    if (!isInDryTestMode) {
+      nh.spinOnce();
+    }
     lastRosUpdate = millis();
   }
   handleTouch();
