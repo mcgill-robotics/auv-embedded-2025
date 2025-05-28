@@ -204,7 +204,7 @@ void optimized_dry_test(int t) {
 
   if (nh.connected()) {
     pub.publish(&cmd_msg);
-    delay(3000);
+    delay(1000);
     pub.publish(&reset_cmd);
   } 
 }
@@ -289,7 +289,7 @@ void handleTouch() {
         // Main screen button press detection
         if (x >= 0 && x <= 300 && y >= 60 && y <= 110) {  // Dry Test button
           isInDryTestMode = true;
-          initializeThrusterMessages();
+          
           initDryTestPage();
         }
       } else {
@@ -438,6 +438,7 @@ void display_setup() {
   nh.subscribe(DEVICEDC);
 
   nh.advertise(pub);
+  initializeThrusterMessages();
 }
 
 void display_loop() {
