@@ -197,6 +197,7 @@ void display_setup() {
 
 void display_loop() {
   handleTouch();
+  tether_dual_battery(tether_new, 0, 0);
   nh.spinOnce();
   delay(10);  // prevent overload
 }
