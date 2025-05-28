@@ -234,7 +234,7 @@ void updateThrusters_page2() {
 void initDryTestPage() {
   tft.setRotation(1);
   tft.fillScreen(BACKGROUND_COLOR); // Dry Test page background
-  initializeThrusterMessages();
+  
 
   // Draw thruster layout
   for (int i = 0; i < 8; i++) {
@@ -289,6 +289,7 @@ void handleTouch() {
         // Main screen button press detection
         if (x >= 0 && x <= 300 && y >= 60 && y <= 110) {  // Dry Test button
           isInDryTestMode = true;
+          initializeThrusterMessages();
           initDryTestPage();
         }
       } else {
@@ -357,6 +358,9 @@ void device(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
 
 // Callback function that updates microseconds array with values from ros
 void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
+  if (isInDryTestMode) {
+    return;
+  }
   memcpy(microseconds, tc.microseconds, 8*sizeof(uint16_t));
   thrusterStatus(Sthrusters);
 }
@@ -432,13 +436,17 @@ void display_setup() {
   nh.subscribe(DEVICEACT);
   nh.subscribe(DEVICEFC);
   nh.subscribe(DEVICEDC);
+
+  nh.advertise(pub);
 }
 
 void display_loop() {
   static unsigned long lastRosUpdate = 0;
 
   if (millis() - lastRosUpdate > 100) {
-    nh.spinOnce();
+    if (!isInDryTestMode) {
+      nh.spinOnce();
+    }
     lastRosUpdate = millis();
   }
   handleTouch();
