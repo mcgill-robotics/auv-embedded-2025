@@ -1,2 +1,4 @@
 stm_workspace/.metadata/
 **.vscode
+.idea
+.idea/*
