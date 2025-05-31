@@ -356,7 +356,7 @@ void tether_dual_battery(float tether_status, float batt1_V, float batt2_V) {
   }
 
   float battery_difference = batt2_V - batt1_V;
-  bool temp_battery_status = battery_difference > 0.52 && battery_difference < 0.63;
+  bool temp_battery_status = battery_difference > -0.02 && battery_difference < 0.02;
 
   if (temp_battery_status != dual_batt_old) {
     uint16_t dual_batt_color = custom_colors[temp_battery_status];
