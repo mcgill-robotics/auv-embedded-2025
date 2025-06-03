@@ -1,3 +1,4 @@
+#ifdef DISPLAY_H
 
 #include <SPI.h>       
 #include <Adafruit_ILI9341.h>
@@ -388,3 +389,4 @@ void display_loop() {
   delay(10);
 }
 
+#endif
