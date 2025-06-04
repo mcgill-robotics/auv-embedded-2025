@@ -1,4 +1,3 @@
-
 #include <SPI.h>       
 #include <Adafruit_ILI9341.h>
 #include <XPT2046_Touchscreen.h>
@@ -135,7 +134,7 @@ void tether_dual_battery(float tether_status, float batt1_V, float batt2_V) {
 
   int temp_tether_status = tether_status;
   float battery_difference = batt2_V - batt1_V;
-  bool temp_battery_status = battery_difference > 0.52 && battery_difference < 0.63;
+  bool temp_battery_status = (battery_difference > -0.05 && battery_difference < 0.05) && (batt1_V >= 12.8 && batt2_V >= 12.8);
 
 
   if (temp_tether_status != tether_old) {
@@ -311,6 +310,7 @@ void handleTouch() {
 }
 */
 
+/*
 void handleTouch() {
   if (!ts.touched()) {
     wasTouched = false;
@@ -343,6 +343,8 @@ void handleTouch() {
     }
   }
 }
+
+*/
 
 void initMainPage() {
   tft.setRotation(1);
@@ -381,11 +383,10 @@ void display_setup() {
 }
 
 void display_loop() {
-  handleTouch();
+  //handleTouch();
   nh.spinOnce();
   batt1(batt_voltage_1_new);
   batt2(batt_voltage_2_new);
+  tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
   delay(10);
 }
-
-
