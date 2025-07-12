@@ -101,8 +101,8 @@ struct Button {
 
 // Main page buttons
 Button buttons[] = {
-  {0, 0, 155, 50, BATTERY_COLOR, "Battery 1"},
-  {160, 0, 155, 50, BATTERY_COLOR, "Battery 2"},
+  {0, 0, 155, 50, BATTERY_COLOR, "0.0"},
+  {160, 0, 155, 50, BATTERY_COLOR, "0.0"},
   {0, 55, 38, 50, NUM_COLOR, "1"},
   {40, 55, 38, 50, NUM_COLOR, "2"},
   {80, 55, 38, 50, NUM_COLOR, "3"},
@@ -119,6 +119,8 @@ Button buttons[] = {
   {230, 110, 44, 48, LABEL_COLOR, "DC"},
   {276, 110, 44, 48, LABEL_COLOR, "DVL"},
   {0, 160, 320, 30, MAIN_RECT_COLOR, "Touch 2nd row for surprise"},
+  {0, 200, 78, 35, BLUE, "T"},
+  {80, 200, 78, 35, BLUE, "DB"},
   {160, 200, 78, 35, BLUE, "Box3"},
   {240, 200, 78, 35, BLUE, "Box4"},
 };
@@ -138,19 +140,6 @@ Button buttons_thrusters[] = {
 // ===== ROS Publishers =====
 ros::Publisher DEPTH("/sensors/depth/z", &depth_msg);
 ros::Publisher pub("/propulsion/microseconds", &cmd_msg);
-
-// ===== ROS Subscribers =====
-ros::Subscriber<std_msgs::Int32> sub_tether("/tether/status", &tetherStatusMessageCallback);
-ros::Subscriber<std_msgs::Float32> BATT1("/battery1/voltage", &battery1Callback);
-ros::Subscriber<std_msgs::Float32> BATT2("/battery2/voltage", &battery2Callback);
-ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
-ros::Subscriber<std_msgs::Int32> DEVICEIMU("/sensors/imu/status", &devicesIMUMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEDVL("/sensors/dvl/status", &devicesDVLMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEPS("/sensors/depth/status", &devicesPSMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEHYD("/sensors/hydrophones/status", &devicesHYDMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEACT("/sensors/actuator/status", &devicesACTMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEFC("/sensors/front_camera/status", &devicesFCMessageCallback);
-ros::Subscriber<std_msgs::Int32> DEVICEDC("/sensors/down_camera/status", &devicesDCMessageCallback);
 
 // ===== Battery/Tether Functions =====
 void tetherStatusMessageCallback(const std_msgs::Int32& msg) {
@@ -296,6 +285,16 @@ void batt2(float V2) {
   }
 }
 
+void thrusterStatus(int Sthrusters[]) {
+  for (int i = 0; i < 8; i++) {
+    if (microseconds[i] == 1500) {
+      Sthrusters[i] = 0;
+    } else {
+      Sthrusters[i] = 1;
+    }
+  }
+}
+
 // ===== Thruster/Devices Functions =====
 void commandCb(const auv_msgs::ThrusterMicroseconds& tc){
   if (isInDryTestMode) {
@@ -333,6 +332,19 @@ void devicesDCMessageCallback(const std_msgs::Int32& msg) {
   devices_new[6] = msg.data;
 }
 
+// ===== ROS Subscribers =====
+ros::Subscriber<std_msgs::Int32> sub_tether("/tether/status", &tetherStatusMessageCallback);
+ros::Subscriber<std_msgs::Float32> BATT1("/power/voltage/battery/1", &battery1Callback);
+ros::Subscriber<std_msgs::Float32> BATT2("/power/voltage/battery/2", &battery2Callback);
+ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
+ros::Subscriber<std_msgs::Int32> DEVICEIMU("/sensors/imu/status", &devicesIMUMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEDVL("/sensors/dvl/status", &devicesDVLMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEPS("/sensors/depth/status", &devicesPSMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEHYD("/sensors/hydrophones/status", &devicesHYDMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEACT("/sensors/actuator/status", &devicesACTMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEFC("/sensors/front_camera/status", &devicesFCMessageCallback);
+ros::Subscriber<std_msgs::Int32> DEVICEDC("/sensors/down_camera/status", &devicesDCMessageCallback);
+
 void thrusters(int T1, int T2, int T3, int T4, int T5, int T6, int T7, int T8) {
   if (isInDryTestMode) return;
 
@@ -359,15 +371,6 @@ void thrusters(int T1, int T2, int T3, int T4, int T5, int T6, int T7, int T8) {
   }
 }
 
-void thrusterStatus(int Sthrusters[]) {
-  for (int i = 0; i < 8; i++) {
-    if (microseconds[i] == 1500) {
-      Sthrusters[i] = 0;
-    } else {
-      Sthrusters[i] = 1;
-    }
-  }
-}
 
 void device(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
   int temp_devices[] = {IMU, DVL, PS, HYD, ACT, FC, DC};
@@ -473,9 +476,10 @@ void initDryTestPage() {
 
 // ===== Display Functions =====
 void initMainPage() {
+
   tft.setRotation(1);
   tft.fillScreen(BACKGROUND_COLOR);
-
+  
   for (const Button &btn : buttons) {
     tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
     tft.setTextColor(BLACK);
