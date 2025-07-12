@@ -1,3 +1,5 @@
+#ifdef DISPLAY_H
+
 #include "SPI.h"
 #include "Adafruit_GFX.h"
 #include <iostream>
@@ -610,3 +612,5 @@ void display_loop() {
 
   delay(10);
 }
+
+#endif
