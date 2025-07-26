@@ -33,7 +33,7 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC);
 XPT2046_Touchscreen ts(TOUCH_CS);
 
 // Colors
-#define BATTERY_COLOR ILI9341_YELLOW
+#define BATTERY_COLOR ILI9341_RED
 #define NUM_COLOR ILI9341_CYAN
 #define LABEL_COLOR ILI9341_RED
 #define MAIN_RECT_COLOR ILI9341_WHITE
@@ -166,7 +166,7 @@ void tether_dual_battery(float tether_status, float batt1_V, float batt2_V) {
     tft.fillRoundRect(0, 200, 78, 35, 6, tether_color);
     tft.setTextColor(ILI9341_WHITE);
     tft.setTextSize(2);
-    tft.setCursor(10, 210);
+    tft.setCursor(33, 210);
     tft.print("T");
     
     tether_old = temp_tether_status;
@@ -178,7 +178,7 @@ void tether_dual_battery(float tether_status, float batt1_V, float batt2_V) {
     tft.fillRoundRect(80, 200, 78, 35, 6, dual_batt_color);
     tft.setTextColor(WHITE);
     tft.setTextSize(2);
-    tft.setCursor(90, 210);
+    tft.setCursor(108, 210);
     tft.print("DB");
     
     dual_batt_old = temp_battery_status;
@@ -506,6 +506,7 @@ void initMainPage() {
   tft.fillScreen(BACKGROUND_COLOR);
   
   for (const Button &btn : buttons) {
+
     tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
     if (btn.label == "Touch 2nd row for surprise") {
       tft.setTextColor(BLACK);
@@ -518,10 +519,13 @@ void initMainPage() {
 
     if (btn.label != "0.0V") {
       tft.setTextSize(2);
-      tft.setCursor(btn.x + (btn.width - w) / 2, btn.y + (btn.height - h) / 2);
+      if (btn.label == "IMU") {
+        tft.setCursor(btn.x + (btn.width - w) / 2 - 9, btn.y + (btn.height - h) / 2 - 5);
+      } else {
+        tft.setCursor(btn.x + (btn.width - w) / 2, btn.y + (btn.height - h) / 2);
+      }
       tft.print(btn.label);
     }
-
   }
   // Force battery display refresh after page change
   voltages_old[0] = -1;  // Force batt1 to update
