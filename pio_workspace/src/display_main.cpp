@@ -103,8 +103,8 @@ struct Button {
 
 // Main page buttons
 Button buttons[] = {
-  {0, 0, 155, 50, BATTERY_COLOR, "0.0"},
-  {160, 0, 155, 50, BATTERY_COLOR, "0.0"},
+  {0, 0, 155, 50, BATTERY_COLOR, "0.0V"},
+  {160, 0, 155, 50, BATTERY_COLOR, "0.0V"},
   {0, 110, 44, 48, LABEL_COLOR, "IMU"},
   {46, 110, 44, 48, LABEL_COLOR, "P"},
   {92, 110, 44, 48, LABEL_COLOR, "H"},
@@ -112,7 +112,7 @@ Button buttons[] = {
   {184, 110, 44, 48, LABEL_COLOR, "FC"},
   {230, 110, 44, 48, LABEL_COLOR, "DC"},
   {276, 110, 44, 48, LABEL_COLOR, "DVL"},
-  {0, 160, 320, 30, MAIN_RECT_COLOR, "Touch 2nd row for surprise"},
+  {0, 164, 320, 30, MAIN_RECT_COLOR, "Touch 2nd row for surprise"},
   {0, 200, 78, 35, RED, "T"},
   {80, 200, 78, 35, RED, "DB"},
   {160, 200, 78, 35, RED, "Celine"},
@@ -507,14 +507,21 @@ void initMainPage() {
   
   for (const Button &btn : buttons) {
     tft.fillRoundRect(btn.x, btn.y, btn.width, btn.height, 8, btn.color);
-    tft.setTextColor(BLACK);
-    tft.setTextSize(2);
-
+    if (btn.label == "Touch 2nd row for surprise") {
+      tft.setTextColor(BLACK);
+    } else {
+      tft.setTextColor(WHITE);
+    }
     int16_t x, y;
     uint16_t w, h;
     tft.getTextBounds(btn.label, 0, 0, &x, &y, &w, &h);
-    tft.setCursor(btn.x + (btn.width - w) / 2, btn.y + (btn.height - h) / 2);
-    tft.print(btn.label);
+
+    if (btn.label != "0.0V") {
+      tft.setTextSize(2);
+      tft.setCursor(btn.x + (btn.width - w) / 2, btn.y + (btn.height - h) / 2);
+      tft.print(btn.label);
+    }
+
   }
   // Force battery display refresh after page change
   voltages_old[0] = -1;  // Force batt1 to update
