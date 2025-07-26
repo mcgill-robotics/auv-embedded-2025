@@ -216,9 +216,12 @@ void batt1(float V1) {
   V1 = movingAverage1(V1);
   V1 = round(V1 * 10.0) / 10.0;
 
-  voltages_new[0] = V1;
-  if (voltages_old[0] != voltages_new[0]) {
-    voltages_old[0] = voltages_new[0];
+  //voltages_new[0] = V1;
+  //if (voltages_old[0] != voltages_new[0]) {
+    //voltages_old[0] = voltages_new[0];
+    // Update display regardless of previous value after page change
+    if (voltages_old[0] != V1 || isInDryTestMode == false) {
+      voltages_old[0] = V1;
 
     uint16_t color;
     if (V1 <= 14.8) {
@@ -493,6 +496,11 @@ void initMainPage() {
     tft.setCursor(btn.x + (btn.width - w) / 2, btn.y + (btn.height - h) / 2);
     tft.print(btn.label);
   }
+  // Force battery display refresh after page change
+  voltages_old[0] = -1;  // Force batt1 to update
+  voltages_old[1] = -1;  // Force batt2 to update
+  batt1(batt_voltage_1_new);
+  batt2(batt_voltage_2_new);
 }
 
 void handleTouch() {
@@ -522,6 +530,9 @@ void handleTouch() {
         if (x >= 8 && x <= 68 && y >= 10 && y <= 40) { // BACK button
           isInDryTestMode = false;
           initMainPage();
+          batt1(batt_voltage_1_new);
+          batt2(batt_voltage_2_new);
+          tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
         } else {
           // Check thruster button presses
           for (int i = 0; i < 8; i++) {
