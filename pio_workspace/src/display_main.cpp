@@ -35,7 +35,7 @@ XPT2046_Touchscreen ts(TOUCH_CS);
 // Colors
 #define BATTERY_COLOR ILI9341_YELLOW
 #define NUM_COLOR ILI9341_CYAN
-#define LABEL_COLOR ILI9341_MAGENTA
+#define LABEL_COLOR ILI9341_RED
 #define MAIN_RECT_COLOR ILI9341_WHITE
 #define DRY_TEST_COLOR ILI9341_GREEN
 #define BACKGROUND_COLOR ILI9341_BLACK
@@ -113,10 +113,10 @@ Button buttons[] = {
   {230, 110, 44, 48, LABEL_COLOR, "DC"},
   {276, 110, 44, 48, LABEL_COLOR, "DVL"},
   {0, 160, 320, 30, MAIN_RECT_COLOR, "Touch 2nd row for surprise"},
-  {0, 200, 78, 35, BLUE, "T"},
-  {80, 200, 78, 35, BLUE, "DB"},
-  {160, 200, 78, 35, BLUE, "Box3"},
-  {240, 200, 78, 35, BLUE, "Box4"},
+  {0, 200, 78, 35, RED, "T"},
+  {80, 200, 78, 35, RED, "DB"},
+  {160, 200, 78, 35, RED, "Celine"},
+  {240, 200, 78, 35, RED, "Celine"},
 };
 
 // Thruster buttons for main page
@@ -382,17 +382,45 @@ void device(int IMU, int DVL, int PS, int HYD, int ACT, int FC, int DC) {
       uint16_t color = device_colors[temp_devices[i]];
       tft.fillRoundRect(device_x[i], device_y, device_width, device_height, 8, color);
 
-      tft.setCursor(device_x[i] + 12, device_y + 15);
+      //tft.setCursor(device_x[i] + 12, device_y + 15);
       tft.setTextColor(WHITE);
       tft.setTextSize(2);
       switch (i) {
-        case 0: tft.print("IMU"); break;
-        case 1: tft.print("DVL"); break;
-        case 2: tft.print("P"); break;
-        case 3: tft.print("H"); break;
-        case 4: tft.print("A"); break;
-        case 5: tft.print("FC"); break;
-        case 6: tft.print("DC"); break;
+        case 0: {
+          tft.setCursor(device_x[i] + 4, device_y + 15);
+          tft.print("IMU");
+          break;
+        }
+        case 1: {
+          tft.setCursor(device_x[i] + 6, device_y + 15);
+          tft.print("DVL");
+          break;
+        }
+        case 2: {
+          tft.setCursor(device_x[i] + 17, device_y + 15);
+          tft.print("P");
+          break;
+        }
+        case 3: {
+          tft.setCursor(device_x[i] + 17, device_y + 15);
+          tft.print("H");
+          break;
+        }
+        case 4: {
+          tft.setCursor(device_x[i] + 17, device_y + 15);
+          tft.print("A");
+          break;
+        }
+        case 5: {
+          tft.setCursor(device_x[i] + 12, device_y + 15);
+          tft.print("FC");
+          break;
+        }
+        case 6: {
+          tft.setCursor(device_x[i] + 12, device_y + 15);
+          tft.print("DC");
+          break;
+        }
       }
       devices_old[i] = temp_devices[i];
     }
