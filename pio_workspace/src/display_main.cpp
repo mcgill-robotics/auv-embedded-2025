@@ -557,6 +557,8 @@ void handleTouch() {
         if (x >= 8 && x <= 68 && y >= 10 && y <= 40) { // BACK button
           isInDryTestMode = false;
           initMainPage();
+          batt_voltage_1_new = 0.0;
+          batt_voltage_2_new = 0.0;
           batt1(batt_voltage_1_new);
           batt2(batt_voltage_2_new);
           tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
