@@ -220,7 +220,7 @@ void batt1(float V1) {
   //if (voltages_old[0] != voltages_new[0]) {
     //voltages_old[0] = voltages_new[0];
     // Update display regardless of previous value after page change
-    if (voltages_old[0] != V1 || isInDryTestMode == false) {
+    if (voltages_old[0] != V1) {
       voltages_old[0] = V1;
 
     uint16_t color;
