@@ -1,9 +1,6 @@
 #include <SPI.h>       
 #include <Adafruit_ILI9341.h>
 #include <XPT2046_Touchscreen.h>
-
-//UPDATE MIA
-//including ROS libraries
 #include <Wire.h>
 #include "MS5837.h"
 #include <ros.h>
@@ -13,7 +10,7 @@
 #include <std_msgs/String.h>
 #include <cmath>
 
-// Forward declarations (tell the compiler these functions exist)
+
 void initMainPage();
 void handleTouch();
 
@@ -277,74 +274,9 @@ void batt2(float V2) {
 
 bool wasTouched = false;
 
-/*
-void handleTouch() {
-  if (!ts.touched()) {
-    wasTouched = false;
-    return;
-  }
 
-  if (!wasTouched) {
-    wasTouched = true;
+//no buttons have touch for the battery, dual battery and tether
 
-    TS_Point p = ts.getPoint();
-    int16_t x = map(p.y, 200, 3800, 0, tft.width());
-    int16_t y = map(p.x, 200, 3800, 0, tft.height());
-    //tether stuff
-    if (x >= 0 && x <= 78 && y >= 200 && y <= 235) {
-      tether_dual_battery(tether_new, 0.0, 0.0);
-      return;
-    }
-    //dual battery
-    if (x >= 80 && x <= 158 && y >= 200 && y <= 235) {
-      tether_dual_battery(0, 11.1, 11.7);
-      return;
-    }
-
-    for (const Button &btn : buttons) {
-      if (x > btn.x && x < btn.x + btn.width && y > btn.y && y < btn.y + btn.height) {
-        // Add logic here for each button if needed
-      }
-    }
-  }
-}
-*/
-
-/*
-void handleTouch() {
-  if (!ts.touched()) {
-    wasTouched = false;
-    return;
-  }
-
-  if (!wasTouched) {
-    wasTouched = true;
-    TS_Point p = ts.getPoint();
-    int16_t x = map(p.y, 200, 3800, 0, tft.width());
-    int16_t y = map(p.x, 200, 3800, 0, tft.height());
-
-    //tether button pressed uses latest tether/battery values
-    if (x >= 0 && x <= 78 && y >= 200 && y <= 235) {
-      tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
-      return;
-    }
-
-    //dual Battery button pressed, uses latest battery voltages
-    if (x >= 80 && x <= 158 && y >= 200 && y <= 235) {
-      tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
-      return;
-    }
-
-    // Other buttons default kinda
-    for (const Button &btn : buttons) {
-      if (x > btn.x && x < btn.x + btn.width && y > btn.y && y < btn.y + btn.height) {
-        // Handle other buttons if needed
-      }
-    }
-  }
-}
-
-*/
 
 void initMainPage() {
   tft.setRotation(1);
