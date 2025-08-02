@@ -304,8 +304,6 @@ void updateStatusDisplay(String newStatus) {
   if (newStatus != status_old) {
     tft.fillRoundRect(0, 164, 320, 30, 8, MAIN_RECT_COLOR);
 
-    delay(2000);
-
     tft.setTextColor(BLACK);
     tft.setTextSize(2);
 
