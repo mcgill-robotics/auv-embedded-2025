@@ -2,11 +2,12 @@ name: PlatformIO CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [noetic]
   pull_request:
-    branches:
-      - main
+    branches: [noetic]
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * *'  # 4 AM Montreal time
 
 jobs:
   build:
