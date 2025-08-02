@@ -1,5 +1,7 @@
 #ifdef DISPLAY_H
 
+#include "display_main.h"
+
 #include "SPI.h"
 #include "Adafruit_GFX.h"
 #include <iostream>
