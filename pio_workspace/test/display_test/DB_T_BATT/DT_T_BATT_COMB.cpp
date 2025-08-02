@@ -52,6 +52,9 @@ XPT2046_Touchscreen ts(TOUCH_CS);
 //Define the number of samples to use in the moving average
 #define MOVING_AVERAGE_SAMPLES 10//idk why we have this from old code
 
+// Initialize sensor object
+MS5837 sensor;
+
 // ROS Node Handle
 ros::NodeHandle nh;
 
@@ -87,11 +90,20 @@ void battery1Callback(const std_msgs::Float32& msg) {
 void battery2Callback(const std_msgs::Float32& msg) {
   batt_voltage_2_new = msg.data;
 }
+// Define publisher message variable
+std_msgs::Float64 depth_msg;
 
 // --------- ROS Subscribers ----------
+ros::Publisher DEPTH("/sensors/depth/z", &depth_msg);
 ros::Subscriber<std_msgs::Int32> sub_tether("/tether/status", &tetherStatusMessageCallback);
 ros::Subscriber<std_msgs::Float32> BATT1("/battery1/voltage", &battery1Callback);
 ros::Subscriber<std_msgs::Float32> BATT2("/battery2/voltage", &battery2Callback);
+
+// Function to calculate and publish depth
+void publish_depth() {
+  depth_msg.data = sensor.depth();
+  DEPTH.publish(&depth_msg);
+}
 
 struct Button {
   int x, y, width, height;
@@ -297,14 +309,25 @@ void initMainPage() {
 
 
 void display_setup() {
+  // Initialize I2C communication with sensor
+  Wire.begin();
+  sensor.init();
+  delay(1000);
+
+  sensor.setModel(MS5837::MS5837_30BA);
+  sensor.setFluidDensity(997);
+
   tft.begin();
   ts.begin();
   ts.setRotation(1);
-
+  
   nh.initNode();
   nh.subscribe(BATT1);
   nh.subscribe(BATT2);
   nh.subscribe(sub_tether);
+
+  // Advertise ROS publisher
+  nh.advertise(DEPTH);
 
   for (int i = 0; i < MOVING_AVERAGE_SAMPLES; i++) {
     voltage_buffer1[i] = 0;
@@ -317,6 +340,11 @@ void display_setup() {
 void display_loop() {
   //handleTouch();
   nh.spinOnce();
+
+  // Read sensor data and publish depth
+  sensor.read();
+  publish_depth();
+
   batt1(batt_voltage_1_new);
   batt2(batt_voltage_2_new);
   tether_dual_battery(tether_new, batt_voltage_1_new, batt_voltage_2_new);
