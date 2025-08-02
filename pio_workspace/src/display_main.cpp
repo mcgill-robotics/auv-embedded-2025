@@ -331,8 +331,8 @@ void devicesDCMessageCallback(const std_msgs::Int32& msg) {
 
 // ===== ROS Subscribers =====
 ros::Subscriber<std_msgs::Int32> sub_tether("/tether/status", &tetherStatusMessageCallback);
-ros::Subscriber<std_msgs::Float32> BATT1("/power/voltage/battery/1", &battery1Callback);
-ros::Subscriber<std_msgs::Float32> BATT2("/power/voltage/battery/2", &battery2Callback);
+ros::Subscriber<std_msgs::Float32> BATT1("/power/batteries/voltage/1", &battery1Callback);
+ros::Subscriber<std_msgs::Float32> BATT2("/power/batteries/voltage/2", &battery2Callback);
 ros::Subscriber<auv_msgs::ThrusterMicroseconds> sub("/propulsion/microseconds", &commandCb);
 ros::Subscriber<std_msgs::Int32> DEVICEIMU("/sensors/imu/status", &devicesIMUMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEDVL("/sensors/dvl/status", &devicesDVLMessageCallback);
