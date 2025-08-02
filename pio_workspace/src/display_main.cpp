@@ -78,6 +78,9 @@ int voltage_buffer_index1 = 0;
 float voltage_buffer2[MOVING_AVERAGE_SAMPLES];
 int voltage_buffer_index2 = 0;
 
+String status_new = "Touch 2nd row for surprise";
+String status_old = "";
+
 // ===== Thruster/Devices Variables =====
 uint16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 int Sthrusters[8];
@@ -112,11 +115,11 @@ Button buttons[] = {
   {184, 110, 44, 48, LABEL_COLOR, "FC"},
   {230, 110, 44, 48, LABEL_COLOR, "DC"},
   {276, 110, 44, 48, LABEL_COLOR, "DVL"},
-  {0, 164, 320, 30, MAIN_RECT_COLOR, "Touch 2nd row for surprise"},
+  {0, 164, 320, 30, MAIN_RECT_COLOR, status_new},
   {0, 200, 78, 35, RED, "T"},
   {80, 200, 78, 35, RED, "DB"},
   {160, 200, 78, 35, RED, "Celine"},
-  {240, 200, 78, 35, RED, "Celine"},
+  {240, 200, 78, 35, RED, "Mia"},
 };
 
 // Thruster buttons for main page
@@ -290,6 +293,28 @@ void thrusterStatus(int Sthrusters[]) {
       Sthrusters[i] = 1;
     }
   }
+
+}
+
+// == Status Update Functions === //
+
+void updateStatusDisplay(String newStatus) {
+  if (newStatus != status_old) {
+    tft.fillRoundRect(0, 164, 320, 30, 8, MAIN_RECT_COLOR);
+
+    delay(2000);
+
+    tft.setTextColor(BLACK);
+    tft.setTextSize(2);
+
+    int16_t x, y;
+    uint16_t w, h;
+    tft.getTextBounds(newStatus, 0,0, &x, &y, &w, &h);
+    tft.setCursor((320-w)/2, 164 + (30 - h) / 2);
+    tft.print(newStatus);
+
+    status_old = newStatus;
+  }
 }
 
 // ===== Thruster/Devices Functions =====
@@ -329,6 +354,14 @@ void devicesDCMessageCallback(const std_msgs::Int32& msg) {
   devices_new[6] = msg.data;
 }
 
+void statusMessageCallback(const std_msgs::String& msg) {
+  status_new = msg.data;
+  updateStatusDisplay(status_new);
+
+}
+
+
+
 // ===== ROS Subscribers =====
 ros::Subscriber<std_msgs::Int32> sub_tether("/tether/status", &tetherStatusMessageCallback);
 ros::Subscriber<std_msgs::Float32> BATT1("/power/batteries/voltage/1", &battery1Callback);
@@ -341,6 +374,7 @@ ros::Subscriber<std_msgs::Int32> DEVICEHYD("/sensors/hydrophones/status", &devic
 ros::Subscriber<std_msgs::Int32> DEVICEACT("/sensors/actuator/status", &devicesACTMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEFC("/sensors/front_camera/status", &devicesFCMessageCallback);
 ros::Subscriber<std_msgs::Int32> DEVICEDC("/sensors/down_camera/status", &devicesDCMessageCallback);
+ros::Subscriber<std_msgs::String> STATUS_SUB("/mission_display", &statusMessageCallback);
 
 void thrusters(int T1, int T2, int T3, int T4, int T5, int T6, int T7, int T8) {
   if (isInDryTestMode) return;
@@ -527,6 +561,10 @@ void initMainPage() {
       tft.print(btn.label);
     }
   }
+
+  //add this line right after the loop to show the surprise 
+  updateStatusDisplay(status_new);
+
   // Force battery display refresh after page change
   voltages_old[0] = -1;  // Force batt1 to update
   voltages_old[1] = -1;  // Force batt2 to update
@@ -616,6 +654,7 @@ void display_setup() {
   nh.subscribe(DEVICEACT);
   nh.subscribe(DEVICEFC);
   nh.subscribe(DEVICEDC);
+  nh.subscribe(STATUS_SUB);
 
   nh.advertise(DEPTH);
   nh.advertise(pub);
