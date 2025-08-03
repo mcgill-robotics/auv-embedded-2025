@@ -22,6 +22,7 @@ SETUP FOR ROS COMMUNICATION WITH THE POWER BOARD
 #include <ros.h>
 #include <auv_msgs/ThrusterMicroseconds.h>
 #include <std_msgs/Float32.h>
+#include <std_msgs/Float32MultiArray.h>
 
 // defines thruster pins
 #define BACK_L_PIN 2
@@ -70,12 +71,17 @@ std_msgs::Float32 thruster8_current_msg;
 std_msgs::Float32 board_temperature_msg;
 std_msgs::Float32 teensy_temperature_msg;
 
+std_msgs::Float32MultiArray all_data_msg;
+float allData[21];
+
 // creates array of 8 thrusters
 Servo thrusters[8];
 
 // signals to push to thrusters
 uint16_t microseconds[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
 const uint16_t offCommand[] = {1500, 1500, 1500, 1500, 1500, 1500, 1500, 1500};
+
+float thrusterForce = -1.0;
 
 float Bvoltages[2]; // array for 2 battery voltage sensing
 float Tcurrents[8]; // array for 8 thrusters current sensing
@@ -97,6 +103,10 @@ void updateThrusters(const uint16_t microseconds[8]) {
 // updates microseconds array with values from ros
 void commandCb(const auv_msgs::ThrusterMicroseconds &tc) {
     memcpy(microseconds, tc.microseconds, 8 * sizeof(uint16_t));
+}
+
+void thruster_force_Cb(const std_msgs::Float32 &tc) {
+    thrusterForce = tc.data;
 }
 
 // attaches and arms thrusters
@@ -128,6 +138,9 @@ ros::Publisher thruster7_current("/power/thrusters/current/7", &thruster7_curren
 ros::Publisher thruster8_current("/power/thrusters/current/8", &thruster8_current_msg);
 ros::Publisher board_temperature("/power/board/temperature", &board_temperature_msg);
 ros::Publisher teensy_temperature("/power/teensy/temperature", &teensy_temperature_msg);
+
+ros::Subscriber<std_msgs::Float32> thrusterforcesub("/thruster/force", &thruster_force_Cb);
+ros::Publisher alldatapub("/all/data", &all_data_msg);
 
 // senses the battery voltages, thruster currents, and board and teensy temperatures
 void senseData() {
@@ -182,6 +195,39 @@ void publishData() {
     teensy_temperature.publish(&teensy_temperature_msg);
 }
 
+void allDataFunction() {
+    allData[0] = microseconds[0];
+    allData[1] = microseconds[1];
+    allData[2] = microseconds[2];
+    allData[3] = microseconds[3];
+    allData[4] = microseconds[4];
+    allData[5] = microseconds[5];
+    allData[6] = microseconds[6];
+    allData[7] = microseconds[7];
+
+    allData[8] = thrusterForce;
+
+    allData[9] = Tcurrents[0];
+    allData[10] = Tcurrents[1];
+    allData[11] = Tcurrents[2];
+    allData[12] = Tcurrents[3];
+    allData[13] = Tcurrents[4];
+    allData[14] = Tcurrents[5];
+    allData[15] = Tcurrents[6];
+    allData[16] = Tcurrents[7];
+
+    allData[17] = Bvoltages[0];
+    allData[18] = Bvoltages[1];
+
+    allData[19] = boardTemperature;
+
+    allData[20] = teensyTemperature;
+
+    all_data_msg.data = allData;
+
+    alldatapub.publish(&all_data_msg);
+}
+
 // setup all thrusters and sensors and setup node handler for subscribing and advertising
 void power_ros1_setup() {
     pinMode(LED_PIN, OUTPUT);
@@ -206,12 +252,19 @@ void power_ros1_setup() {
     nh.advertise(thruster8_current);
     nh.advertise(board_temperature);
     nh.advertise(teensy_temperature);
+    nh.subscribe(thrusterforcesub);
+
+    all_data_msg.data_length = 21;
+
+    nh.advertise(alldatapub);
 }
 
 void power_ros1_loop() {
     updateThrusters(microseconds); 
 
     publishData();
+
+    allDataFunction();
 
     nh.spinOnce();
 
