@@ -1,6 +1,11 @@
 #ifdef ACTUATOR_H
+
 #include "actuator_main.h"
+
+#include <Arduino.h>
+
 #include <Servo.h>
+
 #include <ros.h>
 #include <std_msgs/UInt16.h>
 #include <std_msgs/Bool.h>
@@ -9,7 +14,7 @@
 const int SERVO_PIN = 9;
 
 // create node handle
-ros::NodeHandle nh("actuator-grabber");
+ros::NodeHandle nh;
 
 // create grabber servo object
 Servo grabberServo;
@@ -73,9 +78,5 @@ void servoSweep_CB(const std_msgs::Bool& msg) {
     }
   }
 }
-
-// subscribe to topics
-ros::Subscriber<std_msgs::UInt16> grabberPositionSub("servo/position", &servoPosition_CB);
-ros::Subscriber<std_msgs::Bool> grabberSweepSub("servo/sweep", &servoSweep_CB);
 
 #endif
