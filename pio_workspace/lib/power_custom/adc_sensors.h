@@ -22,7 +22,7 @@ class ADCSensors {
     ADCSensors();
 
     // Initialization of ADCSensor
-    bool begin(bool enableVoltage, bool enableCurrent, TwoWire* wire = &Wire1);
+    bool begin(bool enableVoltage, bool enableCurrent, TwoWire* wire);
     
     // Returns an array pointer to current measurements
     float* senseVoltage();
