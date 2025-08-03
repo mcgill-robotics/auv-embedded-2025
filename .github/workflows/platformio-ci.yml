@@ -2,11 +2,12 @@ name: PlatformIO CI
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+  - cron: '0 0,12 * * *'  # Runs at 00:00 and 12:00 UTC every day
 
 jobs:
   build:
