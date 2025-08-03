@@ -1,0 +1,5 @@
+build
+logs
+devel
+.catkin_tools
+src/propulsion/src/__pycache__
